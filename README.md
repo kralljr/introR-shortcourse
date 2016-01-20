@@ -1,5 +1,5 @@
 # introR-shortcourse
-Files for two-day intro to R course
+Files for two-day introduction to R course
 
 Jenna R. Krall, PhD
 
@@ -13,6 +13,7 @@ Revised January 20, 2016
 2. IntroR-cdc-part1b
 3. IntroR-cdc-part2a
 4. IntroR-cdc-part2b
+
 Each lecture has a .pdf file of slides, and a .Rmd file containing the source material (markdown and R code)
 
 ## Other files
