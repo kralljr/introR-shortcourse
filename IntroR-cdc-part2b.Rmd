@@ -39,10 +39,11 @@ Module 2-4
 Reproducibility in R
 
 1. Introduction to reproducible research
-2. `knitr`
-3. Code chunk options
-4. Tables, figures, in-line code
-5. External code
+2. External code
+3. `knitr`
+4. Code chunk options
+5. Tables, figures, in-line code
+
 
 
 Reproducible research

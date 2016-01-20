@@ -938,6 +938,7 @@ iris_order
 dplyr
 ========================================================
 Adding new variables in `dplyr`
+
 - Much easier than in base R
 - Will use frequently in data analysis
 ```{r}

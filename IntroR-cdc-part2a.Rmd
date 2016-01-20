@@ -361,11 +361,10 @@ opts_chunk$set(out.width= '8cm', fig.width = 6)
 ```
 
 ```{r}
-ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species)) + 
-    geom_point()
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length)) + 
+    
+    geom_point(aes(color = Species))
 ```
-
-
 
 
 
@@ -374,8 +373,28 @@ Basic ggplots
 ========================================================
 
 
+- Put aesthetics inside function call (e.g. `geom_point`) if want to set color, irrespective of data
+```{r, eval = F}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length)) + 
+    
+    geom_point(color = "red")
+```
+- Put aesthetics inside `aes` argument to vary aesthetic by variable
+```{r, eval = F}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length)) + 
+    
+    geom_point(aes(color = Species))
+```
+
+Basic ggplots
+========================================================
+
+
 Shape by factor variable
+
 - Automatic legend
+- Can place aesthetics in `ggplot` if want to change for all layers
+
 ```{r}
 ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
     shape = Species)) + geom_point()
@@ -397,6 +416,23 @@ ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
     xlab("Sepal width") + ylab("Sepal length") +
     ggtitle("Fisher's iris data")
 ```
+
+Create new categorical variable
+========================================================
+
+```{r}
+iris <- mutate(iris, petlencut = cut(Petal.Length, breaks = 4))
+table(iris$petlencut)
+```
+
+Exercise
+========================================================
+
+Exercise 2a
+
+- Plot sepal length against sepal width, and color the points by petlencut
+
+
 
 
 Facetting
@@ -447,13 +483,7 @@ ggplot(iris2, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
 
 
 
-Facetting
-========================================================
 
-```{r}
-iris <- mutate(iris, petlencut = cut(Petal.Length, breaks = 4))
-table(iris$petlencut)
-```
 
 
 
@@ -469,13 +499,6 @@ ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
 ```
 
 
-
-Exercise
-========================================================
-
-Exercise 2a
-
-- Plot sepal length against sepal width, and color the points by petlencut
 
 
 Facetting
@@ -497,8 +520,8 @@ Colors
 
 Coloring by a discrete variable
 ```{r}
-cols <- c("black", "red", "green")
-ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species)) +   
+cols <- c("black", "red", "green", "blue")
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = petlencut)) +   
     geom_point() +
     scale_color_manual(values = cols)
 ```
@@ -1482,7 +1505,7 @@ newsummary(rnorm(10))
 Functions
 ========================================================
 
-Function for nicer base R plot
+Function to set plot defaults
 
 ```{r}
 plot(iris$Sepal.Length, iris$Sepal.Width, col = iris$Species)
@@ -1491,7 +1514,7 @@ plot(iris$Sepal.Length, iris$Sepal.Width, col = iris$Species)
 Functions
 ========================================================
 
-Function to set better plot defaults
+Function to set plot defaults
 
 ```{r}
 nicescatter <- function(data, xvar, yvar, colorvar) {
@@ -1503,7 +1526,7 @@ nicescatter <- function(data, xvar, yvar, colorvar) {
 Functions
 ========================================================
 
-Function to set better plot defaults
+Function to set plot defaults
 
 ```{r}
 nicescatter(iris, "Sepal.Length", "Sepal.Width", "Species")
@@ -1627,7 +1650,7 @@ Syntax
 ========================================================
 
 ```{r}
-x <- clt("normal", 100, 100)
+x <- clt("normal", 1000, 100)
 hist(x)
 ```
 
@@ -1636,7 +1659,7 @@ Syntax
 ========================================================
 
 ```{r}
-x <- clt("poisson", 100, 100)
+x <- clt("poisson", 1000, 100)
 hist(x)
 ```
 
@@ -1645,7 +1668,7 @@ Syntax
 ========================================================
 
 ```{r}
-x <- clt("binomial", 1000, 1000)
+x <- clt("binomial", 1000, 100)
 hist(x)
 ```
 

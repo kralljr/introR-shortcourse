@@ -120,6 +120,8 @@ Getting data into R
 Example using .xls or .xlsx file
 
 - Package `XLConnect` 
+- Warning: other packages may not handle dates correctly
+
 ```{r, echo = T, eval = F}
 wkbook_flu <- loadWorkbook("googleflu.xlsx")
 class(wkbook_flu)
@@ -159,9 +161,9 @@ Getting data into R
 
 ```
 proc export data = googleflu
-outfile = "googleflu.csv"
-dbms = csv replace;
-putnames = yes;
+  outfile = "googleflu.csv"
+  dbms = csv replace;
+  putnames = yes;
 run;
 ```
 - Then use `read.csv` function in R
@@ -218,8 +220,10 @@ Saving data
 ```{r, eval = F}
 save(flu, file = "revised_flu.RData")
 ```
+
     - Will overwite if your file name already exists
     - Remember to set your working directory
+    
 - Save your code as a **.R file** (in the editor)
 
 
@@ -991,9 +995,12 @@ Relative risk and odds ratio
 table_pneumo <- table(vlbw$pneumo, vlbw$outcome)
 table_pneumo
 ```
+Relative risk and odds ratio
+========================================================
 
 - We want to compare odds of IVH by pneumothorax
 ```{r}
+table_pneumo
 epitab(table_pneumo, method = "oddsratio")
 ```
 
@@ -1242,6 +1249,7 @@ Multiple linear regression
 ========================================================
 
 ```{r}
+lm1
 predict(lm1, newdata = newdat1)
 ```
 
