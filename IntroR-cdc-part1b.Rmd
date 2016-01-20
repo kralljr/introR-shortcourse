@@ -1,0 +1,1463 @@
+---
+title: "Introduction to R: Part 1-B"
+author: "Jenna Krall, PhD"
+date: "January 2016"
+height: 900
+font-family: Helvetica
+width: 1440
+fontsize: 10pt
+output:
+  beamer_presentation:
+    includes:
+      in_header: images/header.tex
+---
+
+
+```{r set_knitr_chunk_options, echo = F, message = F, warning = F}
+# Source file with setup
+source("sourcefile.R")
+```
+
+
+
+Modules Part 1
+========================================================
+
+1. R basics
+2. Data frames
+3. Plotting
+4. Data cleaning basics
+5. Statistical tests and models  
+
+
+
+
+
+Module 1-4
+========================================================
+
+Data cleaning basics
+
+1. Reading data into R
+2. Dates
+3. Matrices
+4. Missing data
+5. Naming objects
+
+
+
+Getting data into R
+========================================================
+  R can read in data from many different sources
+
+Types of data files
+
+- R data files: (extension .RData or .rda)
+- CSV file: comma separated values (extension .csv).
+- Excel file: Microsoft Office (extension .xls or .xlsx).  
+    - Can use excel to create a .csv file or read into R directly.
+- SAS: datafiles (extension .sas7bdat) 
+
+**You must either specify the path to the data or set your working directory to the where the data are located**
+
+
+
+
+
+
+
+  Getting data into R
+========================================================
+
+### Google flu trends 
+
+- Estimates flu activity using google searches
+- This dataset includes estimated flu activity (by day) for the whole United States, Georgia, Atlanta, and Health and Human Services Region 4 (which includes Alabama, Florida, Georgia, Kentucky, Mississippi, North Carolina, South Carolina, and Tennessee).
+- Google's Nature paper: \url{http://www.nature.com/nature/journal/v457/n7232/full/nature07634.html}
+- Science paper: \url{http://www.sciencemag.org/content/343/6176/1203}
+- Data Source: Google Flu Trends (\url{http://www.google.org/flutrends}), accessed 12/3/2014
+- "What we can learn from the epic failure of Google flu trends", (\url{http://www.wired.com/2015/10/can-learn-epic-failure-google-flu-trends/}), accessed 12/18/2015 
+
+Getting data into R
+========================================================
+  Example using .RData or .rda files
+```{r mod4, echo = F}
+rm(list = ls())
+```
+```{r, echo = T}
+load("googleflu.RData")
+ls()
+head(flu)
+class(flu)
+```
+
+
+
+Getting data into R
+========================================================
+  Example using .csv file
+```{r, echo = T}
+flu <- read.csv("googleflu.csv", stringsAsFactors = FALSE)
+head(flu)
+class(flu)
+```
+
+
+
+
+Exercise
+========================================================
+
+Exercise 4a
+
+- Read in the .csv file "vlbw.csv"
+
+
+
+
+Getting data into R
+========================================================
+Example using .xls or .xlsx file
+
+- Package `XLConnect` 
+```{r, echo = T, eval = F}
+wkbook_flu <- loadWorkbook("googleflu.xlsx")
+class(wkbook_flu)
+flu <- readWorksheet(wkbook_flu, 1)
+```
+
+
+Getting data into R
+========================================================
+Example using .xls or .xlsx file
+
+```{r}
+head(flu)
+class(flu)
+```
+
+
+
+Getting data into R
+========================================================
+Example using SAS
+
+1. Save SAS data as .csv and read into R
+2. Read SAS data directly
+    - Only if SAS is installed
+    - Do not recommend
+
+
+
+Getting data into R
+========================================================
+1) Save SAS data as .csv and read into R
+
+<br>
+
+- Save data (.sas7bdat) in SAS as .csv file
+
+```
+proc export data = googleflu
+outfile = "googleflu.csv"
+dbms = csv replace;
+putnames = yes;
+run;
+```
+- Then use `read.csv` function in R
+
+```{r, eval = F}
+flu <- read.csv("googleflu.csv", stringsAsFactors = FALSE)
+```
+
+
+
+
+
+
+
+
+Getting data into R
+========================================================
+2) Read SAS data directly (only if SAS is installed)
+
+- Need Windows/SAS
+- Need R package `sas7bdat` (experimental)
+- Use `read.sas7bdat` function to read `.sas7bdat` file directly into R
+    
+```{r, eval = F}
+file1 <- "C:/Users/Desktop/sasfile.sas7bdat"
+flu <- read.sas7bdat(file1)
+```
+
+
+
+Getting data into R
+========================================================
+
+Other functions to read in data include
+
+- read.table
+- read.delim
+- readLines
+- scan
+- many others
+
+
+
+
+
+Saving data
+========================================================
+
+- Objects in your workspace (console) are not saved
+- Saving your workspace (the prompt when closing R)
+    - Saves everything in your current workspace (everything shown when call ls())
+    - Resulting file is an **.RData file** 
+- Saving only relevant output
+```{r, eval = F}
+save(flu, file = "revised_flu.RData")
+```
+    - Will overwite if your file name already exists
+    - Remember to set your working directory
+- Save your code as a **.R file** (in the editor)
+
+
+Saving data
+========================================================
+
+Writing as a csv or text file
+```{r, eval = F}
+write.table(flu, file = "revised_flu.txt", row.names = F)
+write.csv(flu, file = "revised_flu.csv", row.names = F)
+```
+
+
+
+
+Dates
+========================================================
+
+```{r}
+load("googleflu.RData")
+dates <- flu$Date
+head(dates)
+class(dates)
+dates[2] - dates[1]
+```
+
+
+Dates
+========================================================
+What if R doesn't know we have a date?
+```{r}
+flu <- read.csv("googleflu.csv", stringsAsFactors = F)
+dates <- flu$Date
+head(dates)
+class(dates)
+```
+
+
+
+
+Dates
+========================================================
+Use the function `as.Date`
+
+```{r}
+dates <- as.Date(dates, format = "%Y-%m-%d")
+dates[2] - dates[1]
+```
+
+
+**Until you reassign the date variable within the flu dataset, the flu dataset will not have changed**
+
+```{r}
+class(flu$Date)
+
+```
+
+
+Dates
+========================================================
+
+Revise the flu dataset
+```{r}
+flu$Date <- dates
+class(flu$Date)
+```
+
+Alternatively, using `mutate`
+```{r}
+flu <- mutate(flu, Date = as.Date(Date, format = "%Y-%m-%d"))
+```
+
+
+
+
+Factors in R
+========================================================
+    
+```{r, echo = F}
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)
+```
+    
+- Categorical variables
+- Take on a finite number of levels
+- May be represented as character variables 
+```{r}
+head(vlbw$sex)
+```
+or numeric variables 
+```{r}
+head(airquality$Month)
+```
+
+Factors in R
+========================================================
+    
+What are not factor (categorical) variables?
+
+- What did you eat last night?
+- Tell us why you are interested in this study?
+- What is your reason for visiting the emergency department?
+
+
+Factors in R
+========================================================
+    
+```{r}
+educ <- c("bachelors", "less HS", "some college", "HS", "HS", 
+    "some college", "bachelors")
+educ
+class(educ)
+feduc <- factor(educ)
+feduc
+class(feduc)
+```
+
+
+
+Factors in R
+========================================================
+    
+Factors in R
+```{r}
+levels(feduc)
+feduc <- factor(feduc, levels = c("less HS", "HS", "some college",
+    "bachelors"))
+levels(feduc)
+feduc <- factor(feduc, levels = c("less HS", "HS", "some college",
+    "bachelors"), labels = c("< HS", "HS", "Some college", "BA/BS"))
+levels(feduc)
+```
+
+
+Factors in R
+========================================================
+
+Iris dataset
+```{r}
+class(iris$Species)
+levels(iris$Species)
+```
+
+Matrices and data frames
+========================================================
+
+From the R `datasets` package:
+
+- State statistics for the US from the 1970s
+```{r}
+head(state.x77)
+class(state.x77)
+```
+
+
+Matrices and data frames
+========================================================
+
+
+```{r}
+str(state.x77)
+dim(state.x77)
+```
+
+
+Matrices and data frames
+========================================================
+
+
+```{r}
+colnames(state.x77)
+rownames(state.x77)
+```
+
+
+
+
+Matrices and data frames
+========================================================
+
+Cannot select using `$` from matrices
+```{r, eval = F}
+# Does not work
+state.x77$Illiteracy
+```
+
+
+
+
+
+
+Subsetting vectors in R
+========================================================
+
+Recall that we can select items from a vector using brackets
+
+```{r, size = 'tiny'}
+x <- c("item 1", "item 2", "item 3", "item 4")
+```
+We can subset vectors (select elements) using brackets:
+```{r}
+x[c(1, 3, 4)]
+```
+
+We can also use the same techniques to remove items
+```{r}
+x[-c(1, 4)]
+x[-(1 : 3)]
+```
+
+
+
+Subsetting vectors in R
+========================================================
+```{r}
+x
+x == "item 2"
+x[x == "item 2"]
+newvector <- c(2, 5, 2, 6, 7, 6, 4, 10)
+newvector < 5
+newvector[newvector < 5]
+```
+
+
+Exercise 
+========================================================
+
+Exercise 4b
+
+- Create a vector of 10 random normals using `rnorm`
+- Subset the vector to return only positive values
+
+
+
+
+Matrices and data frames
+========================================================
+
+Creating a matrix
+```{r}
+mat1 <- matrix(1 : 12, nrow = 3, ncol = 4)
+mat1
+```
+
+
+
+
+
+Matrices and data frames
+========================================================
+
+
+```{r}
+mat1[1, 2]
+mat1[1 : 2, c(2, 4)]
+```
+
+
+
+
+
+Exercise
+========================================================
+
+Exercise 4c
+
+- Create a vector of 20 random normals
+- Create a matrix of the vector that is 4 rows and 5 columns
+- Extract the third row of the matrix
+- Extract the element in the fourth row and second column
+
+
+
+
+Selecting columns from matrices
+========================================================
+
+Cannot use "$" to subset matrices
+```{r}
+head(state.x77[, 1])
+head(state.x77[1, ])
+head(state.x77[c(2, 3), ])
+```
+
+
+
+
+Selecting columns from matrices
+========================================================
+
+Cannot use "$" to subset matrices
+```{r}
+head(state.x77[, "Population"])
+head(state.x77["Alabama", ])
+head(state.x77["Georgia", "Illiteracy"])
+```
+
+
+
+
+
+
+
+
+
+
+
+Missing data
+========================================================
+
+- `NA` is an R symbol used to denote missing values
+  - When we take the mean of vectors including missing values, we need to remove those missing values
+    ```{r}
+vector1 <- c(2, 5, NA, 10, NA, 1, 1, 2.5, 9, 2)
+mean(vector1)
+mean(vector1, na.rm = TRUE)
+```
+
+
+Missing data
+========================================================
+We can use `is.na` to determine which elements are missing
+```{r}
+is.na(vector1)
+!is.na(vector1)
+vector1[is.na(vector1)]
+```
+
+
+
+Missing data in data frames and matrices
+========================================================
+
+
+```{r}
+mat1
+is.na(mat1)
+```
+
+
+Missing data in data frames and matrices
+========================================================
+
+
+```{r}
+mat1[2, 3] <- NA
+mat1
+which(is.na(mat1))
+which(is.na(mat1), arr.ind = T)
+```
+
+
+
+Missing data in data frames and matrices
+========================================================
+
+
+```{r}
+complete.cases(mat1)
+table(complete.cases(mat1))
+mat1[complete.cases(mat1), ]
+```
+
+
+
+
+Exercise
+========================================================
+
+Exercise 4d
+
+- Read in the dataset `googleflumissing.txt`
+- Create a new dataset without any missing data
+- Save the new dataset as `googleflucomplete.txt`
+
+
+
+
+
+
+
+
+
+Creating new variables
+========================================================
+"Initializing" a new vector or matrix
+```{r}
+mat1 <- matrix(nrow = 2, ncol = 2)
+mat1
+```
+
+
+Creating new variables
+========================================================
+Filling in values
+```{r}
+mat1
+mat1[1, 1] <- 1
+mat1[1, 2] <- 2
+mat1[2, 1] <- 3
+mat1[2, 2] <- 4
+mat1
+```
+
+
+Creating new variables
+========================================================
+
+Creating a dataframe
+```{r}
+class(mat1)
+mat1 <- data.frame(mat1)
+class(mat1)
+mat1
+```
+
+
+
+Filtering in base R
+========================================================
+```{r}
+head(flu$Date)
+flu$Date[flu$Georgia > 6000]
+```
+
+Filtering in base R
+========================================================
+Recall, in `dplyr`
+
+```{r}
+f1 <- filter(flu, Georgia > 6000)
+s1 <- select(f1, Date)
+head(s1)
+head(s1$Date)
+```
+
+Filtering in base R
+========================================================
+Multiple conditions
+```{r}
+flu$Date[flu$Georgia > 6000 & flu$Atlanta > 6000]
+```
+
+
+
+
+
+
+
+Naming objects
+========================================================
+Suppose we want to add column and rownames to our matrix:
+```{r}
+mat1 <- matrix(1 : 12, nrow = 3, ncol = 4)
+mat1
+rownames(mat1)
+colnames(mat1)
+```
+
+
+
+Naming objects
+========================================================
+
+We can then assign names:
+```{r}
+rownames(mat1) <- c("Day1", "Day2", "Day3")
+colnames(mat1) <- c("Variable1", "Variable2", "Variable3", 
+    "Variable4")
+mat1
+```
+
+Naming objects
+========================================================
+
+Use paste and sequence as a shortcut:
+```{r}
+rownames(mat1) <- paste0("Day", 1 : 3)
+colnames(mat1) <- paste0("Variable", 1 : 4)
+mat1
+```
+
+
+
+
+
+
+
+
+Module 1-5
+========================================================
+
+Statistical tests and models
+
+1. T-tests
+2. Chi-squared tests
+3. Relative risk and odds ratio
+4. Linear regression and ANOVA
+5. Generalized linear models
+6. Other models
+
+
+
+
+Data
+========================================================
+
+Very low birthweight infant dataset
+
+- "Data on 671 infants with very low (<1600 grams) birth weight from 1981-87 were collected at Duke University Medical Center by Dr. Michael O'Shea, now of Bowman Gray Medical Center."
+- O'Shea M, Savitz DA, Hage ML, Feinstein KA: Prenatal events and the risk of subependymal / intraventricular haemorrhage in very low birth weight neonates. Paediatric and Perinatal Epdiemiology 1992;6:352-362.
+- Retrieved from \url{http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets}
+
+
+
+Data
+========================================================
+
+Outcome of interest is intra-ventricular hemorrhage (ivh)
+
+```{r mod5}
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)
+vlbw <- select(vlbw, ivh, bwt, gest, pneumo, delivery, twn)
+glimpse(vlbw)
+vlbw <- vlbw[complete.cases(vlbw), ]
+```
+
+
+
+Data
+========================================================
+
+Create relevant outcome using dplyr
+
+```{r}
+1 * TRUE
+head(vlbw$ivh %in% c("definite", "possible"))
+head(1 * (vlbw$ivh %in% c("definite", "possible")))
+vlbw <- mutate(vlbw, outcome = 1 * ((ivh %in% c("definite", "possible"))))
+table(vlbw$ivh, vlbw$outcome)
+```
+
+
+
+Data
+========================================================
+
+*Must be careful if have missing data*
+
+```{r}
+NA %in% c("definite", "possible")
+```
+We will discuss this in more detail later
+
+
+
+
+One sample T tests in R
+========================================================
+
+**Review**
+
+- One sample Z and T tests are used for determining whether the mean in a  population is different than a hypothesized value
+-  Is the average gestational age for infants born with very low birthweight less than 39 weeks?
+
+Assumptions for Z and T tests
+
+- Large sample size or data are approximately normal if sample size is small
+
+Assumptions for Z test
+
+- Population standard deviation is known
+
+
+
+One sample T-tests in R
+========================================================
+Is average gestational age in the population different than 39 weeks (use $\alpha$=0.05)?
+
+- Null hypothesis $H_0:~\mu=$ 39
+- Alternative hypothesis $H_1:~\mu \neq$ 39
+
+
+
+One sample T-tests in R
+========================================================
+
+```{r}
+t_age <- t.test(x = vlbw$gest, mu = 39)
+t_age
+```
+
+
+One sample T-tests in R
+========================================================
+
+```{r}
+class(t_age)
+str(t_age)
+```
+
+
+
+Lists in R
+========================================================
+
+```{r}
+t_age$statistic
+class(t_age$statistic)
+t_age[1]
+class(t_age[1])
+```
+
+Lists in R
+========================================================
+
+```{r}
+t_age[[1]]
+class(t_age[[1]])
+t_age[[3]]
+t_age$p.value
+```
+
+
+
+
+
+
+Two sample T-tests
+========================================================
+
+**Unpaired two sample t-tests**
+
+Recall that a two sample t-test tests the hypothesis that the means in two populations are the same:
+
+- Does the average gestational age of infants born with very low birthweight differ between males and females?
+
+So we are testing whether the means of a continuous variable differ between two groups:
+
+- Null hypothesis $H_0:~\mu_1= \mu_2$
+- Alternative hypothesis $H_1:~\mu_1\neq \mu_2$
+
+If the data are paired, use paired tests
+
+
+
+
+
+Two sample T-tests
+========================================================
+
+Does mean gestational age differ with intra-ventricular hemorrhage?
+
+```{r}
+gest_a <- filter(vlbw, delivery == "abdominal")
+gest_a <- select(gest_a, gest)
+gest_v <- filter(vlbw, delivery == "vaginal") 
+gest_v <- select(gest_v, gest)
+```
+
+Two sample T-tests
+========================================================
+
+Does mean gestational age differ with intra-ventricular hemorrhage?
+
+
+```{r}
+t.test(gest_a, gest_v)
+```
+
+
+
+Two sample T-tests
+========================================================
+
+Does mean gestational age differ with intra-ventricular hemorrhage?
+
+
+```{r}
+t.test(vlbw$gest ~ vlbw$delivery)
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 5a
+
+- Perform a two-sample t-test of whether gestational age is smaller for IVH than no IVH, assuming equal variances
+
+- Null hypothesis $H_0:~\mu_1 \geq \mu_2$
+- Alternative hypothesis $H_1:~\mu_1 < \mu_2$
+
+
+
+
+
+Chi-squared test
+========================================================
+Are two cateogorical variables independent?
+
+- Is HIV infection associated with MRSA infection?
+- Is intra-ventricular hemorrhage associated with delivery type in very low birthweight infants?
+
+Hypothesis:
+
+- Null hypothesis: IVH is independent of delivery type
+- Alternative hypothesis: IVH is not independent of delivery type
+
+Assumptions:
+
+- If 2x2 table, no cell counts < 5
+- If rxc table, no more than 20% cells < 5
+
+
+
+
+
+
+Chi-squared test
+========================================================
+```{r}
+chsq <- chisq.test(vlbw$outcome, vlbw$delivery)
+chsq
+chsq$p.value
+```
+
+
+Exercise
+========================================================
+
+Exercise 5b
+
+- Perform a chi-squared test to see whether the outcome (IVH vs. no IVH) is associated with pneumothorax
+- Extract out the test statistic
+
+
+
+
+
+
+Relative risk and odds ratio
+========================================================
+Relative risk (RR)
+
+- Ratio of risks: $p_1$/$p_2$
+- Is the risk of disease the same in the exposed and unexposed groups?
+- Often interested in testing $H_0:~RR = 1$ vs. $H_1:~RR \neq 1$
+
+Odds ratio (OR)
+
+- Ratio of odds
+- Is the odds of disease the same in the exposed and unexposed groups?
+- Odds: p/(1-p) or p/q
+- OR = ($p_1$/(1 - $p_1$)) / ($p_2$/(1 - $p_2$)) = ($p_1$/$q_1$) / ($p_2$ / $q_2$)
+- Often interested in testing $H_0:~OR = 1$ vs. $H_1:~OR \neq 1$
+
+
+
+
+
+
+Relative risk and odds ratio
+========================================================
+
+- Using R package `epitools`
+- Reference groups are first row and first column
+```{r}
+table_pneumo <- table(vlbw$pneumo, vlbw$outcome)
+table_pneumo
+```
+
+- We want to compare odds of IVH by pneumothorax
+```{r}
+epitab(table_pneumo, method = "oddsratio")
+```
+
+
+Relative risk and odds ratio
+========================================================
+
+
+- We want to compare risk IVH by pneumothorax
+```{r}
+epi_pneumo <- epitab(table_pneumo, method = "riskratio") 
+epi_pneumo
+```
+
+
+Relative risk and odds ratio
+========================================================
+```{r}
+str(epi_pneumo)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+Other R Packages for Epidemiology
+========================================================
+
+
+- Epi
+- epiR
+- epicalc (no longer maintained)
+
+
+
+Sample size calculations in R
+======================================================== 
+
+How many observations would we need to test whether a mean is different than some value if
+
+- The difference between the mean and the value is 0.1
+- The standard deviation is 1
+- We want 90% power
+
+```{r}
+
+power.t.test(delta = 0.1, power = 0.9, type = "one.sample", 
+  alternative = "two.sided")
+```
+
+
+
+
+
+Exercise
+======================================================== 
+
+Exercise 5d
+
+What is our power to test whether two means are different if
+
+- The difference in means is 2
+- The standard deviation is 2
+- We want a type I error of 0.1
+- We have 10 observations
+
+
+
+Sampling data
+========================================================
+
+R has the capability of sampling from many distributions:
+```{r}
+rbinom(10, 1, 0.5)
+rnorm(5)
+rpois(5, lambda = 5)
+rgamma(5, shape = 0.5, rate = 0.5)
+```
+
+
+
+
+
+
+
+
+Simple linear regression
+========================================================
+Simple linear regression:
+
+$E(y | x) = \beta_0 + \beta_1  x$
+
+where
+
+- $E(y | x)$ is the expectation or mean of $y$
+- $\beta_0$ is the intercept, $E(y | x)$ when $x = 0$
+- $\beta_1$ is the slope, the change in $E(y | x)$ for a one unit change in $x$
+
+Assumptions
+
+1. Linearity
+2. Independence
+3. Normality
+4. Equal variances
+
+
+
+Simple linear regression
+========================================================
+```{r mod6}
+lm1 <- lm(gest ~ delivery, data = vlbw)
+lm1
+```
+
+
+Simple linear regression
+========================================================
+```{r}
+str(lm1)
+```
+
+
+
+Simple linear regression
+========================================================
+
+```{r}
+summary(lm1)
+```
+
+
+
+Simple linear regression
+========================================================
+```{r}
+table(vlbw$delivery)
+table(vlbw$ivh)
+```
+
+Simple linear regression
+========================================================
+
+```{r}
+lm1 <- lm(gest ~ ivh, data = vlbw)
+summary(lm1)
+
+```
+
+
+
+Simple linear regression
+========================================================
+
+```{r, eval = F}
+plot(lm1)
+```
+
+
+Simple linear regression
+========================================================
+
+```{r}
+vlbw$ivh <- factor(vlbw$ivh, levels = c("definite", 
+    "possible", "absent"))
+lm1 <- lm(gest ~ ivh, data = vlbw)
+summary(lm1)
+```
+
+
+
+Multiple linear regression
+========================================================
+Allows us to estimate the association between a predictor and outcome while controlling for other variables
+
+$E(y | x) = \beta_0 + \beta_1  x_1 + \beta_2 x_2 + ... + \beta_P x_P$
+
+where
+
+- $E(y | x)$ is the expectation (mean) of $y$
+- $\beta_0$ is the intercept or the $E(y | x)$ when $x_1 = x_2 = ... = x_P = 0$
+- $\beta_1$ is the slope, or the change in $E(y | x)$ for a one unit change in $x_1$ when all other covariates ($x_2, ..., x_P$) are held constant.
+
+
+
+
+Multiple linear regression
+========================================================
+
+```{r}
+lm1 <- lm(gest ~ ivh + bwt, data = vlbw)
+sum1 <- summary(lm1)
+sum1
+```
+
+Multiple linear regression
+========================================================
+
+
+
+Relevant statistics
+```{r}
+sum1$r.squared
+sum1$adj.r.squared
+sum1$fstatistic
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 5d
+
+- Use the output from the model above to find the residuals and create a histogram
+
+
+
+
+
+
+
+
+
+Multiple linear regression
+========================================================
+
+
+```{r}
+head(lm1$fitted)
+newdat1 <- data_frame(c("definite", "possible"), c(1000, 800))
+colnames(newdat1) <- c("ivh", "bwt")
+newdat1
+```
+
+
+
+Multiple linear regression
+========================================================
+
+```{r}
+predict(lm1, newdata = newdat1)
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 5e
+
+- What is the expected gestational age when IVH is definite and birthweight is 1300?
+
+
+
+
+Multiple linear regression
+========================================================
+
+Computing confidence intervals
+```{r}
+confint(lm1)
+```
+
+Interactions
+========================================================
+
+Automatically includes main effects
+```{r}
+lm1 <- lm(gest ~ bwt * delivery, data = vlbw)
+summary(lm1)
+```
+
+
+Interactions
+========================================================
+
+No main effect terms:
+```{r}
+lm1 <- lm(gest ~ bwt : delivery, data = vlbw)
+summary(lm1)
+```
+
+Interactions
+========================================================
+
+```{r}
+lm1 <- lm(gest ~ ivh * delivery, data = vlbw)
+summary(lm1)
+```
+
+
+Removing intercept
+========================================================
+
+```{r}
+lm1 <- lm(gest ~ -1 + bwt , data = vlbw)
+summary(lm1)
+```
+
+
+
+
+
+
+
+
+Analysis of Variance (ANOVA)
+========================================================
+
+- ANOVA tests to see whether a continuous variable differs across levels of another variable
+- ANOVA tests the "global" null hypothesis for $P$ different groups:
+    - Null hypothesis $H_0:~\mu_1= \mu_2 = \mu_3 = ... = \mu_P = \mu$
+    - Alternative hypothesis $H_1:$ at least one group not equal
+
+Assumptions:
+
+- Normality
+- Independence
+- Equal variance: Variance is the same in each of the groups
+
+
+
+
+
+Analysis of Variance (ANOVA)
+========================================================
+
+
+```{r}
+lm1 <- lm(gest ~  ivh, data = vlbw) 
+anova(lm1)
+```
+
+
+
+
+
+
+
+
+
+
+Generalized linear models
+======================================================== 
+
+
+```{r}
+lm(gest ~ ivh, data = vlbw)
+glm(gest ~ ivh, data = vlbw)
+```
+
+
+
+
+
+
+Generalized linear models
+======================================================== 
+
+
+```{r}
+glm1 <- glm(gest ~ ivh, data = vlbw, family = "gaussian")
+summary(glm1)
+```
+
+
+
+Exercise
+======================================================== 
+
+Exercise 5f
+
+- Fit a logistic regression model to estimate the associations between outcome and delivery (Hint: look at the help page for `family`)
+
+
+
+
+
+
+
+
+
+
+Other models
+======================================================== 
+R can also be used to fit more complex models including
+
+- Mixed and random effects models
+- Survival models
+- Ordinal logistic regression
+- Time series models
+- Bayesian modeling
+
+Helpful resource: \url{http://www.statmethods.net/stats/index.html}
+
+
+
+
+
+
+
+
+
+
+Exercise 
+======================================================== 
+
+Diabetes dataset
+
+- Willems JP, Saunders JT, DE Hunt, JB Schorling: Prevalence of coronary heart disease risk factors among rural blacks: A community-based study. Southern Medical Journal 90:814-820; 1997 
+- Schorling JB, Roach J, Siegel M, Baturka N, Hunt DE, Guterbock TM, Stewart HL: A trial of church-based smoking cessation interventions for rural African Americans. Preventive Medicine 26:92-101; 1997.
+- Retrieved from \url{http://biostat.mc.vanderbilt.edu/wiki/Main/DataSets}
+
+
+
+Overview exercise 2
+======================================================== 
+
+
+
+- Read in the file "diabetes.csv"
+- Fit a multiple logistic regression model for the diabetes variable (diab1) on chol, hdl, age, gender, height, weight, waist, and hip.
+- Compute the odds ratios corresponding to each variable
+- Use `confint` to obtain the lower and upper 95% confidence limits for the odds ratios 
+
+
+
+
+
+```{r, echo = F}
+diab <- read.csv("diabetes.csv")
+lm1 <- glm(diab1 ~ chol + hdl + age + gender + height + weight + 
+    waist + hip, data = diab, family = "binomial")
+# Removing intercept
+ci1 <- exp(confint(lm1)[-1, ])
+or <- exp(lm1$coef[-1])
+
+```
+
+
+
+
+
+Plotting confidence intervals
+======================================================== 
+
+```{r}
+plot(1 : 8, or, pch = 16, 
+     ylim = c(0.15, 1.5),
+     ylab = "Odds ratio", xlab = "")
+segments(x0 = 1 : 8, y0 = ci1[, 1], y1 = ci1[, 2])
+abline(h = 1, lty = 2, col = "grey")
+```
+
+
+
+
+
+

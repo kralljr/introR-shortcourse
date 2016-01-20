@@ -1,0 +1,79 @@
+---
+title: "Introduction to R: Part 3 R Extentions"
+author: "Jenna Krall, PhD"
+date: "January 2016"
+height: 900
+font-family: Helvetica
+width: 1440
+fontsize: 10pt
+output: html_document
+runtime: shiny
+---
+
+
+
+
+```{r, echo = F, message = F, warning = F}
+library(dplyr)
+library(shiny)
+library(knitr)
+library(googleVis)
+```
+
+Google maps in R markdown output
+========================================================
+
+
+```{r beach, results = 'asis', echo = F}
+
+# specify options
+op <- options(gvis.plot.tag='chart')
+# specify names
+jensen <- data.frame(matrix(c("Jensen Beach, FL", "Jensen Beach"), nrow = 1))
+colnames(jensen) <- c("loc", "tip")
+
+# set up map
+map1 <- gvisMap(jensen, "loc", "tip", options = list(zoomLevel = 5))
+plot(map1)
+
+```
+
+Shiny application in Rmarkdown
+========================================================
+
+
+```{r, echo = F}
+# Outer function
+shinyApp(
+  #UI controls appearance  
+  ui = fluidPage(
+    # Create input controls for x, y, species
+    selectInput("x", "X:", 
+                choices = colnames(iris),
+                selected = "Sepal.Length"),
+    selectInput("y", "Y:", 
+                choices = colnames(iris),
+                selected = "Sepal.Width"),
+    checkboxGroupInput("species", "Species:", 
+                c("Setosa" = "setosa", 
+                "Virginica" = "virginica",
+                "Versicolor" = "versicolor"),
+                selected = "setosa"),
+    # Add plot output
+    plotOutput("speciesplot")
+  ),
+  
+  # Functions to do R work
+  server = function(input, output) {
+      # Output is plot based on selected inputs
+      output$speciesplot <- renderPlot({
+         plot(iris[iris$Species == input$species, input$x], 
+              iris[iris$Species == input$species, input$y],
+              xlab = input$x, ylab = input$y,
+              xlim = c(0, 8), ylim = c(0, 8))
+    })
+  },
+  
+  options = list(height = 1500)
+)
+```

@@ -1,0 +1,1692 @@
+---
+title: "Introduction to R: Part 2-A"
+author: "Jenna Krall, PhD"
+date: "January 2016"
+height: 900
+font-family: Helvetica
+width: 1440
+fontsize: 10pt
+output:
+  beamer_presentation:
+    includes:
+      in_header: images/header.tex
+---
+
+
+
+```{r set_knitr_chunk_options, echo = F, message = F, warning = F}
+# Source file with setup
+source("sourcefile.R")
+```
+
+
+
+
+Modules Part 2
+========================================================
+
+1. Merging and transforming data
+2. ggplot2
+3. Control structures and functions
+4. Reproducibility in R 
+5. R extensions  
+
+
+Module 2-1
+========================================================
+
+Merging/transforming data
+
+1. Merging datasets
+2. Transforming datasets
+
+
+
+Merging and transforming datasets
+========================================================
+
+```{r mod1}
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)
+vlbw <- select(vlbw, bwt, gest, ivh, delivery, pneumo, twn) 
+vlbw <- vlbw[complete.cases(vlbw), ]
+vlbw <- mutate(vlbw, id = 1 : nrow(vlbw))
+```
+
+
+
+Merging and transforming datasets
+========================================================
+
+- Suppose we had some additional data on birthweight at week 1 and week 2 after birth
+- Infants gain approximately 150 grams per week
+```{r}
+set.seed(1807)
+n <- nrow(vlbw)
+weight1 <- vlbw$bwt + 150 + rnorm(n, sd = 10) 
+weight2 <- weight1 + 150 + rnorm(n, sd = 10)
+weights <- data.frame(seq(1, nrow(vlbw)), weight1, weight2)
+colnames(weights) <- c("id", "weight_1", "weight_2")
+weights <- tbl_df(weights)
+```
+
+
+
+Merging and transforming datasets
+========================================================
+
+```{r}
+weights
+```
+
+
+
+Merging and transforming datasets
+========================================================
+We can merge these two datasets using the `join` functions
+
+```
+full_join(x = data1, y = data2, by = what variable to merge by?)
+```
+
+```{r}
+m_vlbw <- full_join(vlbw, weights, by = "id")
+head(m_vlbw)
+```
+
+
+
+
+
+
+Merging and transforming datasets
+========================================================
+If column names of ID are not the same, can specify `by` argument:
+
+```{r}
+weights2 <- rename(weights, infantID = id)
+head(weights2)
+```
+
+
+Merging and transforming datasets
+========================================================
+If column names of ID are not the same, can specify `by` argument:
+
+- `id` is name of ID in `vlbw`
+- `infantID` is name of ID in `weights`
+
+```{r, eval = T}
+m_vlbw <- full_join(vlbw, weights2, by = c("id" = "infantID"))
+head(m_vlbw)
+```
+
+
+
+
+Merging and transforming datasets
+========================================================
+- IDs may differ between the datasets
+
+```{r}
+# Restrict to IDs less than 35
+vlbw_2 <- filter(vlbw, id < 35)
+n_distinct(vlbw_2$id)
+n_distinct(vlbw$id)
+```
+
+Merging and transforming datasets
+========================================================
+- IDs may differ between the datasets
+- Left join only keeps IDs in first dataset 
+```{r}
+m_vlbw <- left_join(vlbw_2, weights)
+n_distinct(m_vlbw$id)
+```
+
+
+
+**No data for IDs 35-671**
+
+
+
+
+
+
+
+
+Exercise
+========================================================
+
+Exercise 1a
+
+- Use the function `left_join` to merge `vlbw_2` and `weights` to create a dataset with only IDs that are in the weights dataset
+
+
+
+
+
+
+
+
+Transforming datasets
+========================================================
+
+
+These data are in what we call "wide form".  
+
+- Each ID corresponds to one row in the dataset
+- Columns represent the same variable over time (weights)
+
+
+Transforming datasets to "long form"
+
+- Each row represents a unique observation.  
+- Package `tidyr`
+
+```
+gather(data, key = timevar, value = valuevar, what switches)
+```
+
+
+Transforming datasets
+========================================================
+
+
+```{r}
+head(m_vlbw)
+long_data <- gather(m_vlbw, key = time, value = weight, weight_1 : weight_2)
+head(long_data)
+```
+
+
+
+Transforming datasets
+========================================================
+
+- Suppose we also have height data over time
+- Infants gain approximately 1/4 inch per week
+```{r}
+set.seed(831)
+n <- nrow(vlbw)
+height1 <- 5 + 0.25 + rnorm(n, sd = 0.01) 
+height2 <- height1 + 0.25 + rnorm(n, sd = 0.01)
+heights <- data.frame(seq(1, nrow(vlbw)), height1, height2)
+colnames(heights) <- c("id", "height_1", "height_2")
+heights <- tbl_df(heights)
+```
+
+Transforming datasets
+========================================================
+
+- Infants gain approximately 1/4 inch per week
+```{r}
+heights
+```
+
+
+
+Transforming datasets
+========================================================
+
+Transform heights and weights into long form
+```{r}
+hw <- full_join(heights, weights)
+head(hw)
+```
+
+Transforming datasets
+========================================================
+
+```{r}
+long_data2 <- gather(hw, key = key, value = value, height_1 : weight_2)
+head(long_data2)
+
+```
+
+
+Transforming datasets
+========================================================
+
+- This is now a `tidy` dataframe
+```{r}
+tidy_data <- separate(long_data2, key, into = c("variable", "time"), 
+    sep = "_")
+head(tidy_data)
+```
+
+
+Transforming datasets
+========================================================
+
+```{r}
+table(long_data2$key)
+table(tidy_data$variable)
+table(tidy_data$time)
+```
+
+
+
+
+
+
+
+
+
+
+
+Transforming datasets
+========================================================
+Returning the data to "long form",
+```
+spread(data, key = timevar, value = valuevar)
+```
+
+
+```{r}
+wide_data <- spread(long_data, key = time, value = weight)
+head(wide_data)
+```
+
+
+
+tidyr Rstudio cheatsheet
+========================================================
+
+\includegraphics[scale=.35]{images/tidyr.png}
+
+
+
+
+
+
+
+
+
+
+
+
+
+Module 2-2
+========================================================
+
+Package `ggplot2`
+
+1. Recreating simple R plots in ggplot2
+2. Facetting
+
+
+
+
+Basic ggplots
+========================================================
+
+Scatterplot
+
+```{r mod2}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length)) + geom_point()
+```
+
+
+
+Basic ggplots
+========================================================
+
+Color all points
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length)) + 
+    geom_point(color = "red")
+```
+
+
+
+Basic ggplots
+========================================================
+
+Change shape of all points
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length)) + 
+    geom_point(shape = 2)
+```
+
+
+
+Basic ggplots
+========================================================
+
+Color by factor variable
+
+- Automatic legend
+```{r, echo = F}
+opts_chunk$set(out.width= '8cm', fig.width = 6)
+```
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species)) + 
+    geom_point()
+```
+
+
+
+
+
+
+Basic ggplots
+========================================================
+
+
+Shape by factor variable
+- Automatic legend
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point()
+```
+
+
+
+
+
+
+Basic ggplots
+========================================================
+
+Titles and labels
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point() + 
+    xlab("Sepal width") + ylab("Sepal length") +
+    ggtitle("Fisher's iris data")
+```
+
+
+Facetting
+========================================================
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point() +
+    facet_wrap(~ Species)
+```
+
+
+
+
+Facetting
+========================================================
+
+To change facet labels, or change facet order, use `factor`
+
+```{r, eval = F}
+iris2 <- iris
+iris2$Species <- factor(iris$Species, levels = c("versicolor",
+    "virginica", "setosa"), labels = c("VER", "VIR", "SET"))
+
+ggplot(iris2, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point() +
+    facet_wrap(~ Species)
+```
+
+
+Facetting
+========================================================
+
+To change facet labels, or change facet order, use `factor`
+
+```{r, echo = F}
+iris2 <- iris
+iris2$Species <- factor(iris$Species, levels = c("versicolor",
+    "virginica", "setosa"), labels = c("VER", "VIR", "SET"))
+
+ggplot(iris2, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point() +
+    facet_wrap(~ Species)
+```
+
+
+
+
+
+
+Facetting
+========================================================
+
+```{r}
+iris <- mutate(iris, petlencut = cut(Petal.Length, breaks = 4))
+table(iris$petlencut)
+```
+
+
+
+
+Facetting
+========================================================
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point() +
+    facet_wrap(petlencut~ Species)
+
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 2a
+
+- Plot sepal length against sepal width, and color the points by petlencut
+
+
+Facetting
+========================================================
+
+Facet grid
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species,
+    shape = Species)) + geom_point() +
+    facet_grid(petlencut~ Species)
+
+```
+
+
+
+
+Colors
+========================================================
+
+Coloring by a discrete variable
+```{r}
+cols <- c("black", "red", "green")
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Species)) +   
+    geom_point() +
+    scale_color_manual(values = cols)
+```
+
+
+
+
+
+Colors
+========================================================
+
+Coloring by a continuous variable
+```{r}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Petal.Length)) +   
+    geom_point() +
+    scale_color_gradient(low = "black", high = "red")
+```
+
+
+
+
+
+Line plots
+========================================================
+
+```{r}
+data(airquality)
+aq1 <- filter(airquality, Month == 5)
+head(aq1)
+```
+
+
+
+Line plots
+========================================================
+
+```{r}
+ggplot(aq1, aes(x = Day, y = Ozone)) + geom_line()
+```
+
+
+Line plots
+========================================================
+
+```{r}
+ggplot(aq1, aes(x = Day, y = Ozone)) + geom_line(linetype = 2)
+```
+
+
+
+
+Line plots
+========================================================
+
+```{r}
+aq1 <- mutate(airquality, Month = factor(Month))
+ggplot(aq1, aes(x = Day, y = Ozone)) + 
+    geom_line(aes(linetype = Month))
+```
+
+
+
+Exercise 2b
+========================================================
+
+- Change the previous plot of ozone by day so that the color of the lines varies by month
+
+Histograms
+========================================================
+
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width)) + geom_histogram() 
+```
+
+Histograms
+========================================================
+
+```{r}
+ggplot(iris, aes(x = Sepal.Width, fill = Species)) + geom_histogram() 
+
+```
+
+
+
+
+
+
+
+
+Barplots
+========================================================
+
+
+```{r}
+ggplot(iris, aes(x = Species)) + geom_bar() 
+```
+
+Barplots
+========================================================
+
+```{r}
+head(state.x77)
+state <- data.frame(rownames(state.x77), state.x77)
+colnames(state)[1] <- "State"
+```
+
+
+Barplots
+========================================================
+
+```{r, fig.width = 8, out.width = "10cm"}
+ggplot(state, aes(x = State, y = Illiteracy, fill = State)) + 
+    geom_bar(stat = "identity") 
+```
+
+
+Boxplots
+========================================================
+```{r}
+ggplot(iris, aes(Species, Sepal.Length)) + geom_boxplot()
+```
+
+
+
+
+
+Plotting confidence intervals
+========================================================
+
+Creating a dataset of regression results
+```{r}
+iris_spec <- group_by(iris, Species)  
+means <- summarise_each(iris_spec, funs(mean), Sepal.Length : Petal.Width)
+means <- gather(means, "Variable", "Mean", 2 : 5)
+sds <- summarise_each(iris_spec, funs(sd), Sepal.Length : Petal.Width) 
+sds <- gather(sds, "Variable", "SD", 2 : 5)
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 2c
+
+- Use `full_join` to join together means and standard deviations to create one datastet
+- Use `mutate` to create two new variables representing mean - 1 SD and mean + 1 SD
+
+
+
+
+
+
+```{r, echo = F}
+
+CIdat <- full_join(means, sds)
+CIdat <- mutate(CIdat, LB = Mean - SD, UB = Mean + SD)
+
+```
+
+ 
+Plotting intervals
+========================================================
+```{r}
+CIdat
+```
+
+Plotting intervals
+========================================================
+
+
+Using geom_pointrange
+```{r}
+ggplot(CIdat, aes(y = Mean, x = Species, color = Species)) +
+    geom_pointrange(aes(ymin = LB, ymax = UB)) +
+    facet_wrap(~ Variable)
+```
+
+
+
+Plotting intervals
+========================================================
+
+Using geom_pointrange
+```{r}
+ggplot(CIdat, aes(y = Mean, x = Species, color = Species)) +
+    geom_pointrange(aes(ymin = LB, ymax = UB)) +
+    facet_wrap(~ Variable, scales = "free")
+```
+
+
+
+Plotting intervals
+========================================================
+
+Using geom_pointrange
+```{r}
+ggplot(CIdat, aes(y = Mean, x = Species, color = Species)) +
+    geom_pointrange(aes(ymin = LB, ymax = UB)) +
+    facet_wrap(~ Variable, scales = "free_y")
+```
+
+
+
+Plotting intervals
+========================================================
+
+Using geom_errorbar
+```{r}
+ggplot(CIdat, aes(y = Mean, x = Species, color = Species)) +
+    geom_errorbar(aes(ymin = LB, ymax = UB)) +
+    facet_wrap(~ Variable, scales = "free_y")
+```
+
+
+
+
+Exercise
+========================================================
+
+
+Exercise 2d
+
+- Recreate the plot above using `geom_errorbar`, but removing the horizontal lines at each bar, and adding in the point estimates
+
+
+
+
+Plotting intervals
+========================================================
+
+```{r}
+ggplot(CIdat, aes(y = Mean, x = Species)) +
+    geom_errorbar(aes(ymin = LB, ymax = UB,color = Species)) +
+    geom_point(color = "red") +
+    facet_wrap(~ Variable, scales = "free_y")
+```
+
+
+
+
+
+Themes
+========================================================
+
+- Themes control sizing, color, etc.
+- Are "added" to ggplot
+- Syntax:
+
+```
+theme(thing we want to change = theme attribute(attribute assigning))
+```
+
+
+Themes
+========================================================
+
+```{r}
+g1 <- ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, 
+    color = Species)) + geom_point()
+g1
+```
+
+
+
+Themes
+========================================================
+
+- Theme attribute: `element_text`
+- Changing the size of all titles
+
+```{r}
+g1 + theme(title = element_text(size = 25))
+```
+
+
+
+
+
+
+Themes
+========================================================
+
+- `element_line` is used to change lines in ggplot
+```{r}
+g1 + theme(axis.ticks.y = element_line(size = 2))
+```
+
+
+
+Themes
+========================================================
+
+- Changing the background
+```{r}
+g1 + theme_bw()
+```
+
+
+Themes
+========================================================
+
+- Changing the background
+```{r}
+g1 + theme_classic()
+```
+
+
+Themes
+========================================================
+
+
+- `element_blank` is used to remove items from the plot
+```{r}
+g1 + theme(axis.text = element_blank())
+```
+
+
+
+
+
+Legends
+========================================================
+
+- Removing legend
+```{r}
+g1 + theme(legend.position = "none")
+```
+
+
+Legends
+========================================================
+
+- Move legend to top
+```{r}
+g1 + theme(legend.position = "top")
+```
+
+
+
+
+
+
+
+
+
+
+RColorBrewer
+========================================================
+
+- Package `RColorBrewer`
+
+```{r}
+cols <- brewer.pal(n = 5, name = "Dark2")
+g1 + scale_color_manual(values = cols)
+```
+
+
+
+RColorBrewer
+========================================================
+
+- `ggplot` can do this easily:
+
+```{r}
+g1 + scale_colour_brewer(palette = "Dark2")
+```
+
+
+
+Saving ggplots
+========================================================
+
+
+Same as base plotting, though can use saved objects
+```{r, eval = F}
+png("plot1.png")
+g1
+dev.off()
+```
+
+ggplot Rstudio cheatsheet
+========================================================
+
+\includegraphics[scale=.35]{images/tidyr.png}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Module 2-3
+========================================================
+
+
+Control structures and functions
+
+
+1. If/then statements
+2. For loops
+3. Apply statements
+4. Functions
+
+
+
+
+
+
+Control structures
+========================================================
+
+"Controlling" how R performs
+
+- Usually, code in R is executed sequentially (line 1, line 2, etc.)
+- Control structures are useful when we only want R to execute code if a certain condition is met, or if we want to do the same procedure multiple times
+
+
+In SAS
+
+- `if`/`then` statements
+- `do` loops
+
+In R
+
+- `if`/`then` statements
+- `for`, `while` loops
+
+
+
+
+
+If/then/else
+========================================================
+Evaluate code based on whether a condition is true
+
+- If the species is setosa, make the color blue
+
+Syntax:
+```
+if ( conditional statement ) do this
+```
+
+Example 1:
+```{r}
+spec1 <- iris$Species[1]
+spec1 == "setosa"
+if (iris$Species[1] == "setosa") {
+    print("The species is setosa")
+    }
+```
+
+
+
+
+
+If/then/else
+========================================================
+
+- Setting conditions when if statement is not true
+
+
+- if/then/else
+```{r}
+j <- 51
+if (iris$Species[j] == "setosa") {
+    print("The species is setosa") 
+}else {
+    "Not setosa"
+}         
+```
+
+If/then/else
+========================================================
+
+
+
+- `ifelse` 
+- Syntax: ifelse(condition, true result, false result)
+```{r}
+if1 <- ifelse(iris$Species[j] == "setosa", "The species is setosa", "Not setosa")
+
+if1
+```
+
+
+
+
+
+If/then/else
+========================================================
+
+Can create multiple `if/else`'s
+
+Syntax:
+```
+if (conditional statement) {
+    do thing 1
+    do thing 2
+} else if (second conditional statement) {
+    do thing 3 
+    do thing 4
+} else if () {
+    do...
+} else if () {
+    do...
+} else {
+    catchall...
+    last thing!
+}
+```
+
+
+If/then/else
+========================================================
+
+
+```{r}
+if (iris$Species[j] == "setosa") {
+    print("The species is setosa")
+} else if (iris$Species[j] == "virginica") {
+    print("The species is virginica")
+} else {
+    print("The species is versicolor")
+}
+```
+
+
+
+If/then/else
+========================================================
+
+- `else` can lead to potential errors
+```{r}
+iris$Species[101]
+j <- 101
+if (iris$Species[j] == "setosa") {
+    print("The species is setosa")
+} else if (iris$Species[j] == "Virginica") {
+    print("The species is virginica")
+} else {
+    print("The species is versicolor")
+}
+```
+
+
+
+
+If/then/else
+========================================================
+
+Be careful with `else`!
+```{r}
+iris$Species[101]
+j <- 101
+if (iris$Species[j] == "setosa") {
+    print("The species is setosa")
+} else if (iris$Species[j] == "Virginica") {
+    print("The species is virginica") 
+} else if(iris$Species[j] == "versicolor") {
+    print("The species is versicolor")    
+} else {
+    print("Error: species not defined")
+}
+```
+
+
+
+
+Exercise
+========================================================
+
+Exercise 3a
+
+- Reread the "vlbw.csv" dataset, calling it vlbw2
+- Create the outcome variable using mutate, being careful to categorize missing IVH as missing outcome (Hint: use two `ifelse()` commands)
+
+
+
+
+
+
+
+For loops
+========================================================
+
+Performing the same task for multiple variables or conditions
+
+- Take the mean of age, years of education, income, other variables
+- Make scatterplots of CD4 count against a series of risk factors
+
+Syntax:
+```
+for (how will we loop?) do this
+for (how will we loop?) {
+    do these things
+}
+```
+
+
+
+
+For loops
+========================================================
+
+"How will we loop?"
+
+- We need an index (frequently `i`)
+- We need to say how that index will change over the loop
+- e.g. `i in 1 : 4`
+
+For loops
+========================================================
+
+Example 1:
+```{r}
+for (i in 1 : 4) {
+    print(i)
+}
+for (i in c(1, 2, 5)) {
+    print(i)
+}
+```
+
+
+For loops
+========================================================
+
+Example 2:
+```{r}
+seq(1, 10, by = 2)
+for (i in seq(1, 10, by = 2)) {
+    print(i)
+}
+
+```
+
+
+For loops
+========================================================
+Example 3:
+
+```{r, echo = F}
+set.seed(10)
+matrix_1 <- matrix(round(rnorm(20, mean = 5, sd = 2), 2), nrow = 4)
+```
+```{r}
+matrix_1
+for (i in c(1, 3)) {
+    print(matrix_1[i, ])
+}
+
+```
+
+
+
+
+For loops
+========================================================
+
+Example 4: column means
+```{r}
+head(iris)
+for (i in 1 : 4) {
+    print(head(iris[, i]))
+    mean(iris[, i])
+}
+
+```
+
+
+
+
+
+
+For loops
+========================================================
+
+- Saving our means
+```{r}
+mean_iris <- vector(length = 4)
+mean_iris
+for (i in 1 : 4) {
+    mean_iris[i] <- mean(iris[, i])
+}
+mean_iris
+
+```
+
+
+
+
+
+
+
+For loops
+========================================================
+
+
+Useful if have lots of steps and don't need to save intermediate steps
+
+```{r}
+vlbw <- mutate(vlbw, outcome = 1 * ((ivh %in% c("definite", "possible"))))
+for(i in colnames(vlbw)) {
+    print(i)
+    if(!(i %in% c("outcome", "ivh", "id"))) {
+        eqn1 <- paste("outcome ~ ", i)
+        print(eqn1)
+        glm1 <- glm(eqn1, data = vlbw, family = "binomial")
+    }
+}
+```
+
+
+
+
+For loops
+========================================================
+
+
+```{r}
+glmout <- data.frame(colnames(vlbw), matrix(ncol = 2, 
+    nrow = length(colnames(vlbw))))
+colnames(glmout) <- c("Variable", "Est", "SE")
+k <- 1
+for(i in colnames(vlbw)) {
+    if(!(i %in% c("outcome", "ivh", "id"))) {
+        eqn1 <- paste("outcome ~ ", i)
+        glm1 <- glm(eqn1, data = vlbw, family = "binomial") 
+        glmout[k, 2 : 3] <- summary(glm1)$coef[-1, c(1, 2)]
+    }
+    k <- k + 1
+}
+glmout <- mutate(glmout, LB = Est - 1.96 * SE, 
+    UB = Est + 1.96 * SE)
+```
+
+
+
+
+
+
+For loops
+========================================================
+
+
+```{r}
+glmout
+```
+
+
+Exercise 
+========================================================
+
+Exercise 3b
+
+- Construct a for loop for creating scatterplots in base R of sepal length vs. the remaining numeric variables (sepal width, petal length, petal width), including correct axis labels. 
+- Hint: might be easiest to use brackets to extract columns from the iris dataset
+
+
+
+Apply
+========================================================
+
+Series of R functions that automate loops
+
+- apply: apply a function to margins of matrix (rows or columns)
+    - e.g. Means of variables (columns)
+    - e.g. Standard deviation of observations (rows)
+- tapply: apply a function separately to groups of an indexing variable
+    - e.g. Mean heart rate by sex
+    - e.g. Median CD4 count by income group
+- lapply: apply a function to each element of a list
+- sapply: same as lapply, but tries to simplify
+
+
+
+
+Apply
+========================================================
+Syntax for apply:
+```
+apply( X = mymatrix, MARGIN = 1 or 2, FUN = function of choice)
+```
+- `MARGIN = 1` corresponds to rows
+- `MARGIN = 2` corresponds to columns
+
+```{r}
+matrix_1 <- matrix(rnorm(40), nrow = 4)
+dim(matrix_1)
+```
+
+Apply
+========================================================
+Finding standard deviation of each row:
+```{r}
+sd_out <- vector(length = 4)
+sd_out[1] <- sd(matrix_1[1, ])
+sd_out[2] <- sd(matrix_1[2, ])
+sd_out[3] <- sd(matrix_1[3, ])
+sd_out[4] <- sd(matrix_1[4, ])
+sd_out
+```
+
+Apply
+========================================================
+
+```{r}
+sd_out <- vector(length = 4)
+for(i in 1: 4) {
+    sd_out[i] <- sd(matrix_1[i, ])
+}
+sd_out
+apply(matrix_1, 1, sd)
+```
+
+Apply
+========================================================
+Finding median of each column:
+```{r}
+apply(matrix_1, 2, median)
+```
+
+
+Apply
+========================================================
+
+
+We can explicitly use for loops for finding column means:
+```{r}
+mean_iris <- vector()
+for (i in c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")) {
+    mean_iris[i] <- mean(iris[, i])
+}
+mean_iris
+```
+
+Apply
+========================================================
+
+
+One line of code, same result
+```{r}
+apply(iris[, 1 : 4], 2, mean)
+summarise_each(iris, funs(mean), Sepal.Length : Petal.Width)
+```
+*Summarize more useful when have a grouping variable*
+
+Apply
+========================================================
+
+Can pass other arguments to mean
+```{r}
+apply(iris[, 1 : 4], 2, mean)
+apply(iris[, 1 : 4], 2, mean, trim = 0.1, na.rm = T)
+```
+
+
+
+
+Apply
+========================================================
+
+`tapply` allows us to apply a function by a factor
+
+- e.g. What is the mean sepal length by species?
+- e.g. What is the mean FEV by age category?
+
+Syntax:
+```
+tapply(thing to take FUN of, factor, FUN)
+```
+
+
+Apply
+========================================================
+
+Summarizing irises by species
+```{r}
+tapply(iris$Sepal.Length, iris$Species, median)
+tapply(iris$Sepal.Width, iris$Species, sd)
+tapply(iris$Sepal.Width, iris$Species, length)
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 3c
+
+- Compute the mean sepal length by species using
+
+    1. a for loop
+    2. `tapply`
+    3. `summarise` using dplyr
+
+
+
+
+
+
+
+
+
+
+
+
+Functions
+========================================================
+
+Syntax
+
+```
+myfun <- function(argument1, argument2, argumentN) {
+    do things
+}
+```
+
+
+
+Functions
+========================================================
+
+Function for the quadratic equation
+```{r mod4}
+quadeq <- function(a, b, c) {
+    num1 <- (-b + sqrt(b^2 - 4 * a * c)) 
+    num2 <- (-b - sqrt(b^2 - 4 * a * c)) 
+    den <- 2 * a
+    output <- cbind(num1 / den, num2 / den)
+    return(output)
+}
+quadeq(1, 3, 2)
+quadeq(1, 4, 2)
+
+```
+
+
+
+
+Functions
+========================================================
+
+Function arguments
+```{r}
+newsummary <- function(x) {
+    out <- c(mean(x), sd(x), min(x), max(x))
+    return(out)
+}
+newsummary(rnorm(10))
+```
+
+
+
+
+Functions
+========================================================
+
+Function for nicer base R plot
+
+```{r}
+plot(iris$Sepal.Length, iris$Sepal.Width, col = iris$Species)
+```
+
+Functions
+========================================================
+
+Function to set better plot defaults
+
+```{r}
+nicescatter <- function(data, xvar, yvar, colorvar) {
+    plot(data[, xvar], data[, yvar], col = data[, colorvar], pch = 16)
+}
+```
+
+
+Functions
+========================================================
+
+Function to set better plot defaults
+
+```{r}
+nicescatter(iris, "Sepal.Length", "Sepal.Width", "Species")
+```
+
+
+
+Functions
+========================================================
+
+
+Specifying defaults
+
+```{r}
+nicescatter <- function(data, xvar, yvar, cols = "red") {
+    plot(data[, xvar], data[, yvar], col = cols, pch = 16)
+}
+```
+
+
+Functions
+========================================================
+
+
+Specifying defaults
+
+```{r}
+nicescatter(iris, "Sepal.Length", "Sepal.Width")
+```
+
+
+
+
+
+Functions
+========================================================
+
+
+Specifying defaults
+
+```{r}
+nicescatter <- function(data = iris, xvar = "Sepal.Length", 
+    yvar = "Sepal.Width", colorvar = "Species") {
+    plot(data[, xvar], data[, yvar], col = data[, colorvar], pch = 16)
+}
+```
+
+
+
+
+Functions
+========================================================
+
+
+Specifying defaults
+
+```{r}
+nicescatter()
+```
+
+
+Functions
+========================================================
+
+
+Specifying defaults
+
+```{r}
+nicescatter(xvar = "Petal.Width")
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 3d
+
+- Modify the `nicescatter` function to add x- and y-axis labels, and a legend automatically
+
+
+
+
+Functions
+========================================================
+
+
+- R will try and match arguments by name, and then by order
+- Safest approach is to always specify `argument = value` within function call
+
+
+
+
+Functions
+========================================================
+
+Central limit theorem example
+
+```{r}
+# disttype distribution type
+# n size of samples
+# N number of samples
+clt <- function(disttype, n, N) {
+    if(disttype == "normal") {
+        x <- rnorm(n * N)
+    } else if(disttype == "poisson") {
+        x <- rpois(n * N, lambda = 2)
+    } else if(disttype == "binomial") {
+        x <- rbinom(n * N, size = 1, prob = 0.5)
+    } else {
+        stop("Distribution not found")
+    }
+    x <- matrix(x, ncol = n)
+    output <- apply(x, 1, mean)
+}
+```
+
+
+
+Syntax
+========================================================
+
+```{r}
+x <- clt("normal", 100, 100)
+hist(x)
+```
+
+
+Syntax
+========================================================
+
+```{r}
+x <- clt("poisson", 100, 100)
+hist(x)
+```
+
+
+Syntax
+========================================================
+
+```{r}
+x <- clt("binomial", 1000, 1000)
+hist(x)
+```
+
+
+
+
+
+
+
+Overview exercise 3
+========================================================
+
+
+
+Using the airquality dataset,
+
+1. Create a date variable in MM-DD-YY (Hint: the data are from 1973, the functions `unite`, `paste0`, and `as.Date` might be useful)
+
+
+
+
+```{r}
+# Create Date variable
+airquality <- mutate(airquality, Month = paste0("0", Month), 
+    Day = ifelse(Day < 10, paste0("0", Day), Day))
+airquality <- unite_(airquality, "Date", c("Month", "Day"), sep = "-", remove = F)
+airquality <- mutate(airquality, Date = as.Date(paste0("1973-", Date)))
+```
+
+
+
+Overview exercise 3
+========================================================
+
+
+2. Transform the data into `tidy` form (i.e. one column corresponding to variable, one column for the value of that variable (Hint: `gather`))
+3. Plot the time series of each variable (e.g. Ozone vs. Date), faceting on variable (Hint: `geom_line`)
+4. Compute the mean, minimum, and maximum value for each variable (Ozone : Temp) for each day, across months (Hint: `group_by` and `summarise`)
+5. Plot the mean variable value against day, by faceting on each variable.  Additionally, add a ribbon (`geom_ribbon`) for the minimum and maximum value.
+
+
+
+
+

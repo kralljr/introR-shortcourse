@@ -1,0 +1,141 @@
+---
+title: "Markdown/knitr practice"
+author: "Your name"
+date: "January, 2016"
+output: 
+  html_document:
+    toc: true
+---
+
+
+```{r, message = F, warning= F, echo = F}
+library(knitr)
+opts_chunk$set(message = F, echo = F, warning = F)
+opts_knit$set(root.dir = "files/")
+
+library(dplyr)
+library(tidyr)
+library(pander)
+library(ggplot2)
+library(RColorBrewer)
+
+```
+
+# Exploratory data analysis
+
+```{r data}
+diab <- read.csv("diabetes.csv")
+diab <- dplyr::select(diab, diab1, chol, hdl, age, height : weight, waist: hip)
+```
+
+
+
+```{r boxplot}
+cols <- brewer.pal(3, "Dark2")[1 : 2]
+diablong <- gather(diab, "Variable", "Value", chol : hip)
+diablong <- mutate(diablong, Diabetes = ifelse(diab1, "Yes", "No"))
+ggplot(diablong, aes(Diabetes, Value, fill = Diabetes)) + geom_boxplot() + 
+    scale_fill_manual(values = cols) +
+    facet_wrap(~ Variable, ncol = 2, scales = "free_y") +
+    theme_classic()
+```
+
+
+# Univariate analysis results
+
+```{r funmeansd}
+# Function for getting mean (sd)
+# Ideally, this function can be placed in a separate .R file 
+# and called using source or read_chunk
+meansd <- function(x) {
+    mn1 <- mean(x, na.rm = T) 
+    mn1 <- round(mn1, digits = 2)
+    sd1 <- sd(x, na.rm = T)
+    sd1 <- round(sd1, digits = 2)
+    paste0(mn1, " (", sd1, ")")
+}
+```
+
+```{r meansd}
+# First get overall means
+s0 <- summarise_each(diab, funs(meansd), chol : age, height : hip )
+s0 <- data.frame(names(s0), t(s0))
+colnames(s0) <- c("Variable", "total")
+
+# Means by gender
+gen <- group_by(diab, diab1)
+s1 <- summarise_each(gen, funs(meansd), chol : age, height : hip )
+s1 <- gather(s1, "Variable", "Value", chol: hip)
+s1 <- filter(s1, !is.na(diab1))
+s1 <- spread(s1, diab1, Value)
+
+# Joining datasets
+s1 <- full_join(s0, s1)
+```
+
+
+```{r pvals}
+# Subset dataframes for diabetics and non-diabetics
+diab0 <- filter(diab, diab1 == 0)
+diab1 <- filter(diab, diab1 == 1)
+
+# Perform t-test, obtain p-value
+pval <- vector()
+v1 <- as.matrix(s1[, 1])
+for(i in 1 : nrow(s1)) {
+    pval[i] <- t.test(diab0[, v1[i, 1]], diab1[, v1[i, 1]])$p.value
+}
+pval <- round(pval, 2)
+
+# Create final table
+s1 <- data.frame(s1, pval)
+colnames(s1) <- c("Variable", "Total", "Non-diabetic", "Diabetic", "P-value")
+```
+
+
+
+```{r printtab}
+s1[, "P-value"] <- add.significance.stars(s1[, "P-value"])
+kable(s1, caption = "Table of means (standard deviations) of covariates by gender.  P-values correspond to t-tests comparing diabetics to non-diabetics.")
+```
+
+
+
+# Logistic regression results
+
+```{r regres}
+lmres <- matrix(nrow = length(v1), ncol = 4)
+for(i in 1 : length(v1)) {
+    lm1 <- glm(diab1 ~ diab[, v1[i]], data = diab, family = "binomial")
+    lm1 <- summary(lm1)$coef
+    lmres[i, ] <- lm1[-1, ]
+}
+colnames(lmres) <- colnames(lm1)
+lmres <- data.frame(v1, lmres)
+lmres <- mutate(lmres, Type = "Univariable")
+lmres <- rename(lmres, Variable = v1)
+
+lm1 <- glm(diab1 ~., data = diab, family = "binomial")
+lm1 <- summary(lm1)$coef[-1, ]
+lm1 <- data.frame(v1, lm1)
+lm1 <- rename(lm1, Variable = v1)
+lm1 <- mutate(lm1, Type = "Multivariable")
+
+lm1 <- full_join(lm1, lmres)
+
+lm1 <- mutate(lm1, ME = 1.96 * Std..Error, 
+    LB = Estimate - ME, UB = Estimate + ME,
+    OR = exp(Estimate), orUB = exp(UB), orLB = exp(LB))
+```
+
+
+
+```{r plotreg}
+lm1$Type <- factor(lm1$Type, levels = c("Univariable", "Multivariable"))
+ggplot(lm1, aes(x = Variable, y = OR, color = Type)) + 
+    geom_pointrange(aes(ymin = orLB, ymax = orUB), 
+                    position = position_dodge(0.6)) +
+    scale_color_brewer(palette = "Dark2") +
+    geom_hline(yintercept = 1, color = "grey50", linetype = 2) +
+    ylab("Odds ratio") + xlab("") + theme_classic()
+```

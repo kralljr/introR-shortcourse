@@ -1,0 +1,633 @@
+ls()
+#########
+# Exercise 1a#
+vectorstring[seq(1, length(vectorstring), by = 2)]#
+#########
+# Exercise 1b#
+vec1 <- rnorm(20)#
+vec2 <- rnorm(20)#
+meanvec <- c(mean(vec1), mean(vec2))#
+meanvec#
+#########
+# Exercise 1c#
+vec <- rnorm(100)#
+sumvec <- summary(vec)#
+sumvec#
+sumvec[c(2, 3, 5)]#
+#########
+# Exercise 1d#
+set.seed(10)#
+n <- 20#
+heights <- rnorm(n, mean = 70, sd = 4)#
+zstat <- (mean(heights) - 68) / (4 / sqrt(n))#
+pnorm(zstat, lower.tail = F) * 2
+rm(list = ls())
+# Day 1 solutions to exercises#
+# January 2016#
+#########
+#########
+# Module 1-1#
+#########
+#########
+#
+# items needed for module 1-1#
+vectorstring <- c("R", "is", "useful", "for", "data", "analysis")#
+#########
+# Exercise 1a#
+vectorstring[seq(1, length(vectorstring), by = 2)]#
+#########
+# Exercise 1b#
+vec1 <- rnorm(20)#
+vec2 <- rnorm(20)#
+meanvec <- c(mean(vec1), mean(vec2))#
+meanvec#
+#########
+# Exercise 1c#
+vec <- rnorm(100)#
+sumvec <- summary(vec)#
+sumvec#
+sumvec[c(2, 3, 5)]#
+#########
+# Exercise 1d#
+set.seed(10)#
+n <- 20#
+heights <- rnorm(n, mean = 70, sd = 4)#
+zstat <- (mean(heights) - 68) / (4 / sqrt(n))#
+pnorm(zstat, lower.tail = F) * 2
+rm(list = ls())
+# For exercises in module 1-2#
+library(dplyr)#
+data(iris)#
+#
+#########
+# Exercise 2a#
+newiris <- filter(iris, Petal.Width > 1.5 & #
+    ((Species == "virginica") | (Species == "versicolor")))#
+newiris <- select(newiris, Sepal.Length, Sepal.Width, Petal.Length)#
+head(newiris)#
+#
+# Alternative approach#
+newiris2 <- filter(iris, Petal.Width > 1.5 & #
+    (Species %in% c("virginica", "versicolor")))#
+newiris2 <- select(newiris2, Sepal.Length : Petal.Length)#
+all.equal(newiris, newiris2)
+#########
+# Exercise 2b#
+iris2 <- select(iris, Sepal.Length, Species)#
+iris2 <- mutate(iris2, #
+    stdseplen = (Sepal.Length - mean(Sepal.Length)) / sd(Sepal.Length))#
+head(iris2)#
+# Alternative approach#
+iris2 <- mutate(iris2, mn = mean(Sepal.Length), #
+    sd = sd(Sepal.Length), stdseplen = (Sepal.Length - mn) / sd)#
+head(iris2)#
+mean(iris2$stdseplen)#
+sd(iris2$stdseplen)
+#########
+# Exercise 2c#
+s1 <- group_by(iris, Species) %>%#
+    summarise_each(., funs(mean, sd))#
+data.frame(s1)#
+#########
+# Exercise 2d#
+s1 <- mutate(iris, medpetlen = Petal.Length < median(Petal.Length), #
+    medpetwid = Petal.Width < median(Petal.Width)) %>%#
+    group_by(., medpetlen, medpetwid) %>% #
+    summarise_each(., funs(mean), Sepal.Length, Sepal.Width)#
+data.frame(s1)
+rm(list = ls())
+#########
+#########
+# Module 1-3#
+#########
+#########
+# For exercises in module 1-3#
+library(dplyr)#
+data(iris)#
+#
+#########
+# Exercise 3a#
+pch1 <- c(1, 2, 3)#
+pch1 <- pch1[iris$Species]#
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, #
+     xlab = "Sepal length",#
+     ylab = "Sepal width", pch = pch1,#
+     main = "Scatterplot of Iris data")
+#########
+# Exercise 3b#
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, #
+    col = iris$Species)#
+mn1 <- group_by(iris, Species) %>% #
+    summarise(., mean1 = mean(Sepal.Width))#
+abline(h = mn1$mean1, col = 1 : 3)
+#########
+# Exercise 3c#
+pch0 <- c(1, 2, 3)#
+pch1 <- pch0[iris$Species]#
+mn1 <- group_by(iris, Species) %>% #
+    summarise(., mean1 = mean(Sepal.Width))#
+#
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, #
+     col = iris$Species, pch = pch1)#
+abline(h = mn1$mean1, col = 1 : 3)#
+legend("topright", legend = levels(iris$Species), #
+     col = 1 : 3, pch = pch0, lty = 1)
+#########
+# Exercise 3d#
+hist(iris$Sepal.Length, probability = T, breaks = 20)
+#########
+#########
+# Overall exercise 1#
+#########
+#########
+head(airquality)#
+airquality <- mutate(airquality, monthname = factor(Month, levels = 5 : 9, #
+    labels = c("May", "June", "July", "August", "September")))#
+gaq <- group_by(airquality, Month)#
+summarise_each(gaq, funs(mean(., na.rm = T)), Ozone : Temp)#
+#
+lms <- lm(Ozone ~ Solar.R, data = airquality)$coef#
+lmw <- lm(Ozone ~ Wind, data = airquality)$coef#
+lmt <- lm(Ozone ~ Temp, data = airquality)$coef#
+#png("overallex1.png", height = 300, width = 1000)#
+par(mfrow = c(1, 4), ps = 18)#
+cols <- c(1 : 5)[airquality$monthname]#
+plot(Ozone ~ Solar.R, data = airquality, col = cols)#
+abline(a = lms[1], b = lms[2])#
+#
+plot(Ozone ~ Wind, data = airquality, col = cols)#
+abline(a = lmw[1], b = lmw[2])#
+#
+plot(Ozone ~ Temp, data = airquality, col = cols)#
+abline(a = lmt[1], b = lmt[2])#
+#
+plot(1, 1, type = "n", axes = F, xlab = "", ylab = "")#
+legend("topleft", legend = levels(airquality$monthname), #
+       col = 1 : 5, pch = 1)#
+#dev.off()
+#########
+#########
+# Module 1-4#
+#########
+#########
+#
+# For exercises, be sure working directory is set to where "googleflu.csv" and "googleflumissing.txt" are located#
+#
+#########
+# Exercise 4a#
+# Old way#
+flu <- read.csv("googleflu.csv", stringsAsFactors = FALSE)#
+# Other way#
+flu2 <- read.table("googleflu.csv", sep = ",", header = T, #
+    stringsAsFactors = F)#
+all.equal(flu, flu2)
+setwd("~/Desktop/clean/")
+#########
+#########
+# Module 1-4#
+#########
+#########
+#
+# For exercises, be sure working directory is set to where "googleflu.csv" and "googleflumissing.txt" are located#
+#
+#########
+# Exercise 4a#
+# Old way#
+flu <- read.csv("googleflu.csv", stringsAsFactors = FALSE)#
+# Other way#
+flu2 <- read.table("googleflu.csv", sep = ",", header = T, #
+    stringsAsFactors = F)#
+all.equal(flu, flu2)
+setwd("~/Desktop/clean/files")
+#########
+#########
+# Module 1-4#
+#########
+#########
+#
+# For exercises, be sure working directory is set to where "googleflu.csv" and "googleflumissing.txt" are located#
+#
+#########
+# Exercise 4a#
+# Old way#
+flu <- read.csv("googleflu.csv", stringsAsFactors = FALSE)#
+# Other way#
+flu2 <- read.table("googleflu.csv", sep = ",", header = T, #
+    stringsAsFactors = F)#
+all.equal(flu, flu2)
+#########
+# Exercise 4b#
+flu <- read.csv("googleflu.csv", stringsAsFactors = F)#
+flu$Date <- as.Date(flu$Date, format = "%Y-%m-%d")#
+flu$Date <- format(flu$Date, format = "%d%b%y")
+#########
+# Exercise 4c#
+flumiss <- read.table("googleflumissing.txt", header = T)#
+table(complete.cases(flumiss))#
+flucomplete <- flumiss[complete.cases(flumiss), ]#
+write.table(flucomplete, "googleflucomplete.txt", row.names = F)
+#########
+# Exercise 4d#
+set.seed(535895)#
+mat2 <- matrix(rnorm(20), nrow = 4)#
+class(mat2[, 1])#
+dim(mat2[, 1])#
+mat2[, 1, drop = F]
+#########
+#########
+# Module 1-5#
+#########
+#########
+# For exercises in module 1-5, make sure working directory is set to where "vlbw.csv" is located#
+library(dplyr)#
+library(epitools)#
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw <- select(vlbw, ivh, bwt, gest, pneumo, delivery, twn)#
+vlbw <- vlbw[complete.cases(vlbw), ]#
+vlbw <- mutate(vlbw, outcome = 1 * ((ivh %in% c("definite", "possible"))))
+#########
+# Exercise 5a#
+head(vlbw$outcome == 1)#
+gest_ivh <- vlbw$gest[vlbw$outcome == 1]#
+head(gest_ivh)#
+gest_no <- vlbw$gest[vlbw$outcome == 0]#
+head(gest_no)#
+var.test(gest_ivh, gest_no)#
+t.test(gest_ivh, gest_no, var.equal = T, alternative = "less" )#
+#########
+# Exercise 5b
+#########
+# Exercise 5b#
+chsq <- chisq.test(vlbw$outcome, vlbw$delivery, correct = F)#
+pval1 <- chsq$p.value#
+ts <- sum((chsq$observed - chsq$expected)^2 / chsq$expected)#
+pval2 <- pchisq(ts, 1, lower.tail = F)#
+all.equal(pval1, pval2)
+#########
+# Exercise 5c#
+table_del <- table(vlbw$delivery, vlbw$pneumo)#
+epi_del <- epitab(table_del, method = "oddsratio", rev = "both") #
+epi_del$tab[2, c("lower", "upper")]
+rm(list = ls())
+#########
+# Exercise 5d#
+power.t.test(n = 10, delta = 2, sd = 2, sig.level = 0.1, #
+    type = "two.sample", alternative = "two.sided")
+#########
+#########
+# Module 1-6#
+#########
+#########
+# For exercises in module 1-6, make sure working directory is set to where "vlbw.csv" is located#
+library(contrast)#
+library(dplyr)#
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw <- select(vlbw, ivh, bwt, gest, pneumo, delivery, twn)#
+vlbw <- vlbw[complete.cases(vlbw), ]#
+vlbw <- mutate(vlbw, outcome = 1 * ((ivh %in% c("definite", "possible"))))#
+vlbw$ivh <- factor(vlbw$ivh)#
+lm1 <- lm(gest ~ ivh + bwt, data = vlbw)#
+lm2 <- lm(gest ~ ivh + bwt + delivery + pneumo + twn, data = vlbw)#
+slm2 <- summary(lm2)$coef[-1, ]#
+slm2
+#########
+# Exercise 6a#
+#
+head(lm1$resid)#
+hist(lm1$resid)#
+all.equal(lm1$resid, vlbw$gest - lm1$fitted)
+#########
+# Exercise 6b#
+lm1 <- lm(gest ~ ivh + bwt, data = vlbw)$coef[c(1, 4)]#
+lmy <- lm(gest ~ ivh, data = vlbw)$resid#
+lmx <- lm(bwt ~ ivh, data = vlbw)$resid#
+#
+plot(lmy ~ lmx, xlab = "BWT | IVH", ylab = "GEST | IVH",#
+     main = "Added variable plot")#
+abline(a = 0, b = lm1[2], col = "red")
+#########
+# Exercise 6c#
+lm1 <- lm(gest ~ ivh, data = vlbw)#
+lev1 <- levels(vlbw$ivh)#
+contrast(lm1, a = list(ivh = lev1), b = list(ivh = "possible"))
+#########
+# Exercise 6d#
+glm(outcome ~ delivery, data = vlbw, family = binomial(link = "log"))
+#########
+#########
+# Overall exercise 2#
+#########
+#########
+diab <- read.csv("diabetes.csv")#
+diab <- select(diab, diab1, chol, hdl, age:weight, waist: hip)#
+lm1 <- glm(diab1 ~., data = diab, family = "binomial")#
+lm1 <- summary(lm1)$coef[-1, ]#
+lm1 <- data.frame(rownames(lm1), lm1)#
+lm1 <- rename(lm1, Variable = rownames.lm1., SE = Std..Error)#
+lm1 <- mutate(lm1, ME = 1.96 * SE, LB = Estimate - ME, UB = Estimate + ME,#
+    OR = exp(Estimate), orUB = exp(UB), orLB = exp(LB))#
+head(lm1)#
+#
+#png("overallex2.png")#
+par(mar = c(7, 4, 4, 2))#
+xval <- 1 : nrow(lm1)#
+plot(xval, lm1$OR, las = 2, pch = 16, #
+     ylim = c(min(lm1$orLB), max(lm1$orUB)),#
+     ylab = "Odds ratio", xlab = "", axes = F)#
+box()#
+axis(2)#
+axis(1, at = xval, labels = lm1$Variable, las = 2)#
+segments(x0 = xval, y0 = lm1$orLB, y1 = lm1$orUB)#
+abline(h = 1, lty = 2, col = "grey")#
+#dev.off()
+rm(list = ls())
+# For exercises in module 2-1, make sure working directory is set to where "vlbw.csv" is located#
+library(contrast)#
+library(dplyr)#
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw <- select(vlbw, bwt, gest, ivh, delivery, twn, pneumo) %>%#
+    mutate(., id = 1 : nrow(vlbw))#
+vlbw <- vlbw[complete.cases(vlbw), ]#
+set.seed(1807)#
+n <- nrow(vlbw)#
+weight1 <- vlbw$bwt + 150 + rnorm(n, sd = 10) #
+weight2 <- weight1 + rnorm(n, sd = 10)#
+weights <- data.frame(seq(1, nrow(vlbw)), weight1, weight2)#
+colnames(weights) <- c("id", "weight_1", "weight_2")#
+weights <- tbl_df(weights)#
+vlbw_2 <- filter(vlbw, id < 35)#
+weights_2 <- filter(weights, id %in% seq(20, 40))#
+#########
+# Exercise 1a#
+#
+# IDs in weights dataset#
+m_vlbw <- left_join(weights_2, vlbw_2)#
+n_distinct(m_vlbw$id)
+#########
+# Exercise 1b#
+# IDs in both datasets#
+m_vlbw <- inner_join(weights_2, vlbw_2)#
+n_distinct(m_vlbw$id)
+#########
+# Exercise 1c#
+long_data <- gather(weights, key = time, value = weight, weight_1 : weight_2)#
+long_data <- filter(long_data, id %in% c(1: 10))
+library(tidyr)
+#########
+# Exercise 1c#
+long_data <- gather(weights, key = time, value = weight, weight_1 : weight_2)#
+long_data <- filter(long_data, id %in% c(1: 10))
+#########
+# Exercise 1d#
+long_data <- gather(weights, key = time, value = weight, weight_1 : weight_2)#
+long_data <- filter(long_data, id %in% c(1: 10))#
+semi_join(vlbw, long_data)
+long_data
+head(vlbw)
+rm(list = ls())
+# For exercises in module 2-1, make sure working directory is set to where "vlbw.csv" is located#
+library(contrast)#
+library(dplyr)#
+library(tidyr)#
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw <- select(vlbw, bwt, gest, ivh, delivery, twn, pneumo)#
+vlbw <- vlbw[complete.cases(vlbw), ]#
+vlbw <- mutate(vlbw,  id = 1 : nrow(vlbw))#
+set.seed(1807)#
+n <- nrow(vlbw)#
+weight1 <- vlbw$bwt + 150 + rnorm(n, sd = 10) #
+weight2 <- weight1 + rnorm(n, sd = 10)#
+weights <- data.frame(seq(1, nrow(vlbw)), weight1, weight2)#
+colnames(weights) <- c("id", "weight_1", "weight_2")#
+weights <- tbl_df(weights)#
+vlbw_2 <- filter(vlbw, id < 35)#
+weights_2 <- filter(weights, id %in% seq(20, 40))#
+#########
+# Exercise 1a#
+#
+# IDs in weights dataset#
+m_vlbw <- left_join(weights_2, vlbw_2)#
+n_distinct(m_vlbw$id)#
+#########
+# Exercise 1b#
+# IDs in both datasets#
+m_vlbw <- inner_join(weights_2, vlbw_2)#
+n_distinct(m_vlbw$id)#
+#########
+# Exercise 1c#
+long_data <- gather(weights, key = time, value = weight, weight_1 : weight_2)#
+long_data <- filter(long_data, id %in% c(1: 10))#
+#########
+# Exercise 1d#
+long_data <- gather(weights, key = time, value = weight, weight_1 : weight_2)#
+long_data <- filter(long_data, id %in% c(1: 10))#
+semi_join(vlbw, long_data)
+#########
+#########
+# Module 2-2#
+#########
+#########
+# Necessary for exercises in module 2-2#
+iris_sum <- group_by(iris, Species) %>% #
+    summarise_each(., funs(mean), Sepal.Length : Petal.Width)#
+means <- gather(iris_sum, "Variable", "Mean", 2 : 5)#
+sds <- group_by(iris, Species) %>% #
+    summarise_each(., funs(sd), Sepal.Length : Petal.Width) %>%#
+    gather(., "Variable", "SD", 2 : 5)#
+#########
+# Exercise 2a#
+ggplot(iris, aes(x = Sepal.Width, fill = Species)) + geom_histogram()
+#########
+# Exercise 2b#
+CIdat <- full_join(means, sds)#
+tstat <-  qt(0.975, 49)#
+CIdat <- mutate(CIdat, ME = tstat * SD / sqrt(50), #
+   LB = Mean - ME, UB = Mean + ME) %>% select(., -ME)
+#########
+# Exercise 2c#
+ggplot(CIdat, aes(y = Mean, x = Species, color = Species)) +#
+    geom_errorbar(aes(ymin = LB, ymax = UB), width = 0) + geom_point() +#
+    facet_wrap(~ Variable, scales = "free_y")
+#########
+# Exercise 2d#
+g1 + theme(text = element_text(size = 25, color = "red"))
+rm(list = ls())
+# Necessary for exercises in module 2-2#
+iris_sum <- group_by(iris, Species) %>% #
+    summarise_each(., funs(mean), Sepal.Length : Petal.Width)#
+means <- gather(iris_sum, "Variable", "Mean", 2 : 5)#
+sds <- group_by(iris, Species) %>% #
+    summarise_each(., funs(sd), Sepal.Length : Petal.Width) %>%#
+    gather(., "Variable", "SD", 2 : 5)#
+#
+g1 <- ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, #
+    color = Species)) + geom_point()#
+#
+#########
+# Exercise 2a#
+ggplot(iris, aes(x = Sepal.Width, fill = Species)) + geom_histogram() #
+#########
+# Exercise 2b#
+CIdat <- full_join(means, sds)#
+tstat <-  qt(0.975, 49)#
+CIdat <- mutate(CIdat, ME = tstat * SD / sqrt(50), #
+   LB = Mean - ME, UB = Mean + ME) %>% select(., -ME)#
+#########
+# Exercise 2c#
+ggplot(CIdat, aes(y = Mean, x = Species, color = Species)) +#
+    geom_errorbar(aes(ymin = LB, ymax = UB), width = 0) + geom_point() +#
+    facet_wrap(~ Variable, scales = "free_y")#
+#########
+# Exercise 2d#
+g1 + theme(text = element_text(size = 25, color = "red"))
+g1 + theme(axis.ticks = element_blank(), panel.grid = element_blank())
+#########
+#########
+# Module 2-3#
+#########
+#########
+#
+# For exercises in module 2-3#
+library(dplyr)#
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw <- select(vlbw, bwt, gest, ivh, delivery, twn, pneumo) #
+vlbw <- vlbw[complete.cases(vlbw), ]#
+vlbw <- mutate(vlbw, outcome = 1 * ((ivh %in% c("definite", "possible"))))#
+glmout <- data.frame(colnames(vlbw), matrix(ncol = 2, #
+   nrow = length(colnames(vlbw))))#
+colnames(glmout) <- c("Variable", "Est", "SE")#
+k <- 1#
+for(i in colnames(vlbw)) {#
+    if(!(i %in% c("outcome", "ivh", "id"))) {#
+        eqn1 <- paste("outcome ~ ", i)#
+        glm1 <- glm(eqn1, data = vlbw, family = "binomial") #
+        glmout[k, 2 : 3] <- summary(glm1)$coef[-1, c(1, 2)]#
+    }#
+    k <- k + 1#
+}#
+glmout <- mutate(glmout, LB = Est - 1.96 * SE, #
+    UB = Est + 1.96 * SE)
+rm(list = ls())
+# For exercises in module 2-3#
+library(dplyr)#
+vlbw <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw <- select(vlbw, bwt, gest, ivh, delivery, twn, pneumo) #
+vlbw <- vlbw[complete.cases(vlbw), ]#
+vlbw <- mutate(vlbw, outcome = 1 * ((ivh %in% c("definite", "possible"))))#
+glmout <- data.frame(colnames(vlbw), matrix(ncol = 2, #
+   nrow = length(colnames(vlbw))))#
+colnames(glmout) <- c("Variable", "Est", "SE")#
+k <- 1#
+for(i in colnames(vlbw)) {#
+    if(!(i %in% c("outcome", "ivh", "id"))) {#
+        eqn1 <- paste("outcome ~ ", i)#
+        glm1 <- glm(eqn1, data = vlbw, family = "binomial") #
+        glmout[k, 2 : 3] <- summary(glm1)$coef[-1, c(1, 2)]#
+    }#
+    k <- k + 1#
+}#
+glmout <- mutate(glmout, LB = Est - 1.96 * SE, #
+    UB = Est + 1.96 * SE)#
+#########
+# Exercise 3a#
+vlbw2 <- read.csv("vlbw.csv", stringsAsFactors = F)#
+vlbw2 <- mutate(vlbw2, outcome = ifelse(ivh %in% c("definite", "possible"), #
+    1, ifelse(ivh == "absent", 0, NA)))#
+table(vlbw2$outcome, vlbw2$ivh, exclude = NULL)
+#########
+# Exercise 3b#
+glmout <- mutate(glmout, OR = exp(Est), orLB = exp(LB), #
+    orUB = exp(UB))#
+ggplot(glmout, aes(x = Variable, y = OR)) + #
+    geom_pointrange(aes(ymin = orLB, ymax = orUB)) +#
+    geom_abline(intercept = 1, slope = 0, color = "red", linetype = 2)
+#########
+# Exercise 3c#
+vars <- colnames(iris)[2 : 4]#
+par(mfrow = c(1, 3))#
+for(i in 1 : 3) {#
+    plot(iris[, vars[i]], iris[, "Sepal.Length"], xlab = vars[i],#
+         ylab = "Sepal.Length")#
+}
+#########
+# Exercise 3d#
+lev1 <- levels(iris$Species)#
+m_seplen <- vector()#
+for(i in seq_along(lev1)) {#
+    m_seplen[i] <- mean(iris$Sepal.Length[iris$Species == lev1[i]])#
+}#
+tapply(iris$Sepal.Length, iris$Species, mean)#
+group_by(iris, Species) %>% summarise(., mean(Sepal.Length))
+#########
+#########
+# Overall exercise 3#
+#########
+#########
+# Load data#
+data(airquality)#
+# Create Date variable#
+airquality <- mutate(airquality, Month = paste0("0", Month), #
+                     Day = ifelse(Day < 10, paste0("0", Day), Day))#
+airquality <- unite_(airquality, "Date", c("Month", "Day"), sep = "-", remove = F)#
+airquality <- mutate(airquality, Date = as.Date(paste0("1973-", Date)))#
+#
+# Transform data#
+airquality <- gather(airquality, "Variable", "Value", Ozone : Temp)#
+#
+# Plot time series#
+ggplot(airquality, aes(x = Date, y = Value)) + geom_line() + #
+    facet_wrap(~ Variable, scales = "free_y")#
+#
+# Compute mean, min, max#
+airquality <- mutate(airquality, Day = as.numeric(Day))#
+gaq <- group_by(airquality, Day, Variable)#
+gaq <- summarise(gaq, mn1 = mean(Value, na.rm = T), #
+                 min1 = min(Value, na.rm = T), #
+                 max1 = max(Value, na.rm = T))#
+#
+# Plot time series and ribbon#
+ggplot(gaq, aes(x = Day, y = mn1)) + #
+    geom_ribbon(aes(ymin = min1, ymax = max1), alpha = 0.2) +#
+    geom_line() + ylab("Mean (minimum, maximum)") +#
+    facet_wrap(~ Variable, scales = "free_y")
+rm(list = ls())
+#########
+# Exercise 4a#
+newsummary <- function(x, na1 = T) {#
+    out <- c(mean(x, na.rm = na1), sd(x, na.rm = na1), #
+             min(x, na.rm = na1), max(x, na.rm = na1))#
+    return(out)#
+}#
+newsummary(c(rnorm(10), NA))#
+newsummary(c(rnorm(10), NA), na1 = F)
+#########
+# Exercise 4b#
+nicescatter <- function(data = iris, xvar = "Sepal.Length", #
+                        yvar = "Sepal.Width", colorvar = "Species", #
+                        cols1 = c(1, 2, 3)) {#
+    cols <- cols1[data[, colorvar]]#
+    plot(data[, xvar], data[, yvar], col = cols, pch = 16,#
+         xlab = xvar, ylab = yvar)#
+    legend("topright", legend = levels(data[, colorvar]), #
+           col = cols1, pch = 16)#
+}#
+nicescatter()
+#########
+# Exercise 4c#
+meansd <- function(x) {#
+    mn1 <- mean(x, na.rm = T) %>% round(., digits = 2)#
+    sd1 <- sd(x, na.rm = T) %>% round(., digits = 2)#
+    paste0(mn1, " (", sd1, ")")#
+}#
+meansd(iris$Sepal.Length)
+#########
+# Exercise 4d#
+gfun <- function() {#
+    g1 <- ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, color = Petal.Length))    #
+    g1 <- g1 + geom_point() #
+    g1 <- g1 + scale_color_gradient(low = "#FF8C00", high = "#68228B") #
+    g1 <- g1 + theme(text = element_text(size = 8)) #
+    g1 <- g1 + facet_wrap(~ Species, nrow = 1)#
+    g1#
+}#
+gfun()

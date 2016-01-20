@@ -1,0 +1,1599 @@
+---
+title: "Introduction to R: Part 1-A"
+author: "Jenna Krall, PhD"
+date: "January 2016"
+height: 900
+font-family: Helvetica
+width: 1440
+fontsize: 10pt
+output:
+  beamer_presentation:
+    includes:
+      in_header: images/header.tex
+---
+
+
+
+
+```{r set_knitr_chunk_options, echo = F, message = F, warning = F}
+# Source file with setup
+source("sourcefile.R")
+```
+
+
+
+Introduction to R
+========================================================
+Course details
+
+- Course website: \url{http://www.jennakrall.com/cdc}
+
+Instructor details
+
+- Instructor: Dr. Jenna Krall, PhD
+- E-mail: jenna.krall@emory.edu
+
+
+Introduction to R
+========================================================
+
+
+- Course divided into modules
+- Lecture materials contain R code
+- Exercises throughout modules (~ 5 minutes each)
+- Longer overview exercises (~ 15 minutes each)
+
+
+
+
+
+
+
+Introduction to R 
+========================================================
+Course objectives
+
+- Read in and clean data
+- Compute summary statistics
+- Apply statistical methods
+- Create publication-quality figures
+- Create well-formatted output tables
+- Create reproducible reports
+
+
+
+
+Modules Part 1
+========================================================
+
+1. R basics
+2. Data frames
+3. Plotting
+4. Data cleaning basics
+5. Statistical tests and models  
+
+
+
+
+
+Module 1-1
+========================================================
+
+R basics
+
+1. History of R
+2. R vs. other statistical programming languages
+3. Orientation to R
+4. R basics
+6. R style 
+7. Resources
+
+
+
+History of R
+========================================================
+
+
+- Programming language for statistical computing
+- Derived from S language (John Chambers, Bell labs)
+- GNU (Gnu's not UNIX) project: free and open source
+- Developed by
+    - Ross Ihaka (University of Auckland)
+    - Robert Gentleman (Genentech)
+- R can do almost anything
+    - Users can create their own R packages
+- R project: http://www.r-project.org/
+- Comprehensive R Archive Network (CRAN): http://cran.r-project.org/
+
+
+R vs. other statistical programming languages
+========================================================
+
+- The R language
+    - We can create objects (e.g. a vector of heights)
+    - Objects can interact with other objects (e.g. comparing height and age)
+    - Programs consist of applying methods to objects (e.g. what is the mean height?)
+- R is interactive
+- R and RStudio
+- R is easily customizable
+    - Customize figures
+    - Make nicely formatted tables
+    - Write functions
+
+
+
+
+R vs. other statistical programming languages
+========================================================
+SAS
+
+- Not designed for interactive programming
+- Easy to look at your data
+- Difficult to create customized output
+- Need a lot of code to perform simple tasks (e.g. to find a mean)
+
+
+In SAS,
+
+```
+proc means data = data1;
+var variable1;
+run;
+```
+In R,
+
+```{r mod1, eval = F}
+mean(variable1)
+```
+
+
+
+
+R vs. other statistical programming languages
+========================================================
+
+- Stata
+    - One dataset at a time
+    - Intuitive and easy data cleaning
+- MATLAB
+    - Matrix computation
+    - Powerful
+- SPSS
+    - Intuitive
+    - No programming required
+
+
+
+Orientation to R
+========================================================
+
+The console
+
+- Type code interactively
+- Do not plan to save this code
+
+Editor
+
+- Save code for later
+- Can run in console from editor
+
+
+Orientation to R
+========================================================
+
+R vs. RStudio
+
+- R
+    - Console and editor
+- RStudio
+    - Integrated development environment (IDE) for R
+    - Runs usual R
+    - Nice layout with different panels for editor, console, etc.
+    - Additional features
+
+
+
+
+Orientation to R
+========================================================
+
+
+RStudio basics
+
+- Code viewer
+- Console
+- **History: what commands have been run in current R session**
+- **Environment: what is in current workspace** 
+- **Files: what files are available on computer**
+- Help: view help pages
+- Plots
+- Packages: what packages are available and loaded
+- Viewer: web content
+
+
+
+
+R basics
+========================================================
+
+```{r}
+5 + 3
+```
+
+```{r}
+123 / 2 * (2 + 17.2)
+```
+
+
+
+
+R basics
+========================================================
+Can store results using assignment operators
+
+```{r}
+nameofobject <- 5
+nameofobject
+```
+
+Can calculate result as object:
+```{r}
+nameofsum <- 5 + 3
+nameofsum
+```
+Objects can be functions of other objects:
+```{r}
+nameofnew <- nameofobject + nameofsum
+nameofnew
+```
+
+
+
+
+Orientation to R
+========================================================
+
+
+RStudio basics
+
+- Code viewer
+- Console
+- **History: what commands have been run in current R session**
+- **Environment: what is in current workspace** 
+- **Files: what files are available on computer**
+- Help: view help pages
+- Plots
+- Packages: what packages are available and loaded
+- Viewer: web content
+
+
+R basics
+========================================================
+Objects can be reassigned
+
+   - Recall that we created an R object `nameofobject`
+```{r}
+nameofobject
+```
+   - Suppose we reassign the name
+```{r}
+nameofobject <- 1500
+nameofobject
+
+```
+
+
+
+
+
+Functions
+========================================================
+
+- Syntax is `functionname(functionarguments)`
+
+```{r}
+length(nameofobject)
+class(nameofobject)
+```
+
+
+
+
+Classes
+========================================================
+
+- So far, all the R objects we have dealt with have been numeric  
+- There are different data classes that R objects can belong to
+- Character objects are non-numeric
+- Use quotations to create character objects
+
+```{r}
+nameofstring <- "IntrotoR"
+nameofstring
+class(nameofstring)
+```
+
+
+Classes
+========================================================
+
+- Can create vectors by combining numbers or text.  
+- The `c` function in R combines objects together.
+- **One of the most important functions in your R arsenal**
+
+```{r}
+vector1 <- c(6, 2, 3, 4)
+vector1
+class(vector1)
+length(vector1)
+```
+
+
+Classes
+========================================================
+
+- Can create integer vectors using a colon
+
+```{r}
+2 : 5
+```
+
+- Or the `seq` function
+
+```{r}
+seq(2, 5)
+seq(1, 10, by = 2)
+```
+
+
+Classes
+========================================================
+
+Vectors can also consist of strings
+
+
+```{r, size="footnotesize"}
+vectorstring <- c("R", "is", "useful", "for", "data", "analysis")
+vectorstring
+class(vectorstring)
+length(vectorstring)
+```
+
+Classes
+========================================================
+Mixing data classes
+```{r}
+vectormix <- c("Intro", "to", "R", "version", 1)
+vectormix
+class(vectormix)
+length(vectormix)
+```
+- Numbers with quotations are not numbers
+
+
+Classes
+========================================================
+
+Why does class matter?
+
+- Functions will perform differently for different classes
+    - Mean of a character vector is meaningless
+
+- There are many other classes
+    - Later: factors, matrices, data frames, lists, dates
+    - Classes for output (e.g. linear model class lm)
+    - In R, you can create your own classes of R objects
+
+
+
+
+
+
+Selecting elements of a vector
+========================================================
+
+Use brackets to select elements of a vector
+```{r}
+vectorstring
+vectorstring[1]
+vectorstring[c(1, 4, 5)]
+```
+
+
+Exercise
+========================================================
+
+Exercise 1a
+
+- Select only the odd ordered elements of vectorstring (i.e. 1, 3, 5, etc.)
+
+
+
+
+
+
+
+Some useful stat functions
+========================================================
+
+```{r}
+vector1
+mean(vector1)
+sd(vector1)
+median(vector1)
+summary(vector1)
+```
+
+
+
+
+
+
+
+
+
+
+Exercise
+========================================================
+Exercise 1b
+
+- Create a vector of 100 draws from the standard normal distribution
+```{r}
+vec1 <- rnorm(100)
+```
+- Compute the summary of the vector
+- Create a new vector that contains the first quantile, the median, and the third quantile
+
+
+Setting the seed
+========================================================
+
+- To obtain the *exact* same result for a random process, set the seed beforehand
+- R uses a pseudo-random number generator from the starting seed
+```{r}
+rnorm(10)
+set.seed(2371)
+rnorm(10)
+set.seed(2371)
+rnorm(10)
+```
+
+
+
+
+
+Packages 
+========================================================
+
+Packages include tools to perform many different analyses
+
+- Some packages are preloaded
+    - base (`mean`, `print`, `length`), stats (`median`, `lm`)
+    - datasets
+    - graphics
+
+- Can install and load additional packages from CRAN
+    - ggplot2, RColorBrewer (advanced graphics)
+    - dplyr, tidyr (data cleaning/manipulation tools)
+
+Installing a package (may need to specify a CRAN mirror)
+
+```{r, eval = F}
+install.packages("ggplot2")
+```
+Loading a package
+```{r, eval = F}
+library(ggplot2)
+```
+
+Working directory
+========================================================
+
+Where R
+
+    - looks for data
+    - saves data, figures, etc.
+
+```{r}
+getwd()
+```
+
+
+
+Working directory
+========================================================
+
+Change your working directory using `setwd`
+```{r, eval = F}
+setwd("/home/jkrall/Dropbox/")
+```
+- For Windows users, setwd("C:/Users/yourusername/etc.")
+    - NOTE: must use forward slash!
+- For Mac users, setwd("/Users/yourusername/etc.")
+
+
+
+
+Exercise
+========================================================
+
+Exercise 1c
+
+- Set your working directory to the folder containing all the class datasets (introR-shortcourse/files)
+- Type in the R console `list.files()` to see what is in the current working directory
+- Type in the R console `ls()` to see what is in your current R environment
+
+
+
+R style 
+========================================================
+
+- Appropriate spacing
+- Return lines longer than 80 characters (after comma)
+```{r, echo = F}
+vector1 <- c(6, 2, 3, 4)
+```
+- Commenting your code
+```{r}
+# This is the mean of our numeric vector
+mean(vector1)
+```
+
+> Your closest collaborator is you six months ago but you don’t reply to email.
+-- Erin Jonaitis (via Andrew Gelman)
+
+
+
+
+R style 
+========================================================
+
+
+Style guides:
+
+- Hadley Wickham: \url{http://r-pkgs.had.co.nz/style.html}
+- Google's: \url{https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml}
+
+
+
+Resources
+========================================================
+
+R help files (use `?function`)
+
+```
+?mean
+help.search("mean")
+```
+Books
+
+- Modern Applied Statistics with S (Venables and Ripley, 2002)
+- Advanced R (Wickham, 2014)
+- R Programming for Data Science (Peng, 2015) (cheap, available online)
+    - <https://leanpub.com/rprogramming>
+
+
+Resources
+========================================================
+
+Search engines
+
+- Google: Append CRAN onto your google search for R.
+- R seek: \url{http://www.rseek.org/}
+
+Other resources \url{http://www.jennakrall.com/IntrotoRepi/resources.html}
+
+- R short-refcard: \url{https://cran.r-project.org/doc/contrib/Short-refcard.pdf}
+- Stack Overflow: \url{http://stackoverflow.com/questions/tagged/r}
+- UCLA R stats: \url{http://www.ats.ucla.edu/stat/r/}
+- RStudio cheatsheets: \url{https://www.rstudio.com/resources/cheatsheets/}
+
+
+
+
+
+
+
+
+Saving 
+========================================================
+
+- Objects in your workspace (console) are not saved
+- Saving your workspace (the prompt when closing R)
+    - Saves everything in your current workspace (everything shown in your Environment tab in RStudio, or alternatively when you call ls())
+    - Resulting file is an **.RData file** (more later)
+- Save your code as a **.R file** (in the editor)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Module 1-2
+========================================================
+
+Data frames
+
+1. Introduction to `dplyr`
+2. Relational operators
+3. Dataset manipulation with `dplyr`
+4. Data summary statistics
+
+
+`dplyr`
+========================================================
+
+The `dplyr` package for data manipulation
+
+- `dplyr`: A Grammar of Data Manipulation
+- Manipulate datasets, including adding and removing columns
+- Creating a clean, analytic dataset
+- Summarizing your data
+- Base R can do this too, but less intuitive
+
+
+
+Relational operators
+========================================================
+
+- Comparing values
+```{r mod2}
+2 < 2
+2 <= 2
+2 == 2
+2 != 2
+!(2 == 2)
+```
+
+
+
+
+
+
+
+Relational operators
+========================================================
+
+- Logical vectors
+```{r}
+x <- rnorm(10)
+y <- rnorm(10)
+z <- x >= y
+x
+y
+z
+class(z)
+```
+
+
+
+Relational operators
+========================================================
+
+- and: `&`
+- or: `|`
+```{r}
+(2 == 2) & (2 == 4)
+(2 == 2) | (2 == 4)
+```
+
+
+
+
+Relational operators
+========================================================
+
+```{r}
+2 %in% (1 : 5)
+!(2 %in% (1 : 5))
+vectorstring
+"useful" %in% vectorstring
+```
+
+
+Relational operators
+========================================================
+
+- TRUE and FALSE must be always capitalized
+- Can use abbreviations (T for TRUE and F for FALSE)
+
+```{r}
+F == FALSE
+T == TRUE
+```
+
+
+Matrices and data frames
+========================================================
+
+- Rows = observations, columns = variables
+- Matrices: variables of the same type (e.g. numeric).  Will address later.
+- Data frames: mix of numeric, string/character, factor variables
+
+Fisher's Iris dataset
+
+- Data set from Ronald Fisher (1936) "The use of multiple measurements in taxonomic problems"
+- Data collected by Edgar Anderson
+```{r, eval = F}
+?iris
+View(iris)
+```
+
+
+
+Matrices and data frames
+========================================================
+
+- **Best command for when you get a new dataset:**
+
+```{r}
+str(iris)
+
+```
+
+Fisher's Iris dataset
+========================================================
+
+```{r}
+head(iris)
+class(iris)
+```
+
+
+
+
+
+
+
+
+
+
+
+Subsetting columns from a data frame
+========================================================
+
+- If we only want one column (i.e. to take the mean), use `$`
+
+```{r}
+seplen <- iris$Sepal.Length
+head(seplen)
+```
+
+
+
+Subsetting columns from a data frame
+========================================================
+
+- If we only want one column (i.e. to take the mean), use `$`
+
+```{r}
+mean(iris$Sepal.Length)
+str(iris$Sepal.Length)
+table(iris$Species) 
+```
+
+
+
+
+
+
+dplyr
+========================================================
+
+`dplyr` allows users to clean data frames intuitively (more similar to SAS or Stata)
+
+- Select works to create a new data frame with the selected columns
+
+
+```{r}
+iris_sub <- select(iris, Sepal.Length, Sepal.Width)
+head(iris_sub)
+```
+
+
+
+dplyr
+========================================================
+
+- Removing columns
+
+```{r}
+iris_sub <- select(iris, -Petal.Length, -Petal.Width, -Species)
+head(iris_sub)
+```
+
+
+
+dplyr vs. SAS
+=======================================================
+Select works like keep or drop in SAS:
+```
+data iris; set iris;
+  keep Sepal.Length Sepal.Width;
+run;
+
+data iris; set iris;
+  drop Petal.Length Petal.Width Species;
+run;
+```
+
+
+dplyr
+========================================================
+- Filtering: subsetting and removing rows
+
+```{r}
+iris_setosa <- filter(iris, Species == "setosa")
+head(iris)
+```
+
+
+
+
+dplyr vs. SAS
+=======================================================
+Filter works like if/where in SAS:
+
+```
+data iris; set iris;
+  where Species = 'setosa';
+run;
+```
+
+
+dplyr
+========================================================
+Renaming variables
+
+```{r}
+head(iris)
+iris_sub <- rename(iris, sepallength = Sepal.Length)
+head(iris_sub)
+```
+
+
+
+dplyr vs. SAS
+=======================================================
+Rename works like rename in SAS (except old and new names are reversed):
+
+```
+data iris; set iris;
+  rename Sepal.Length = sepallength;
+run;
+
+```
+
+
+
+dplyr
+========================================================
+
+Slice allows you to select specific rows
+
+```{r}
+iris_sub <- slice(iris, c(1, 3, 5))
+iris_sub
+```
+
+
+
+
+Exercise
+========================================================
+
+Exercise 2a.
+
+- Create a new dataset of only measurements with petal width less than or equal to 0.5 and only the variables sepal length, sepal width, and petal length
+
+
+
+
+
+
+dplyr
+========================================================
+```{r}
+iris
+```
+
+
+dplyr
+========================================================
+
+A new type of R object: `tbl_df`
+
+```{r}
+iris <- tbl_df(iris)
+iris
+```
+
+
+
+dplyr
+========================================================
+Arrange is a way of ordering data by many variables easily
+
+```{r}
+iris_order <- arrange(iris, Sepal.Length)
+iris_order
+```
+
+
+
+dplyr
+========================================================
+Adding new variables in `dplyr`
+- Much easier than in base R
+- Will use frequently in data analysis
+```{r}
+iris2 <- mutate(iris, slcut = Sepal.Length < 5)
+iris2
+```
+
+dplyr
+========================================================
+Adding new variables in `dplyr`
+```{r}
+iris <- mutate(iris, slcut = Sepal.Length < mean(Sepal.Length))
+iris
+```
+
+
+
+
+Side note
+========================================================
+
+For datasets already in R (via the R `datasets` package), use `data` to revert back to the original dataset
+
+```{r}
+data(iris)
+head(iris)
+```
+
+
+
+Exercise
+========================================================
+
+Exercise 2b.  
+
+- Create a new variable in the iris dataset that is the standardized sepal length
+
+
+
+
+
+dplyr
+========================================================
+
+
+`group_by` in `dplyr` specifies grouping variables
+
+```{r}
+iris_spec <- group_by(iris, Species)
+iris_spec
+```
+
+
+
+
+
+
+dplyr
+========================================================
+```{r}
+ungroup(iris_spec)
+```
+
+
+dplyr
+========================================================
+
+We often want to summarize variables by levels of a factor
+
+- What is the mean Sepal.Length by Species?
+- What is the median Sepal.Width by cut sepal length?
+
+
+
+dplyr
+========================================================
+
+Summarize/summarise allows us to summarize continuous data by factors variables easily
+```{r}
+summarise(iris_spec, mean1 = mean(Sepal.Length))
+```
+
+
+
+dplyr
+========================================================
+
+Often, we want to summarize multiple variables
+```{r}
+summarise_each(iris_spec, funs(mean), Sepal.Length, Sepal.Width)
+```
+
+
+
+dplyr
+========================================================
+
+We can also include multiple functions
+```{r}
+summarise_each(iris_spec, funs(mean, median), Sepal.Length)
+```
+
+
+
+
+
+Exercise
+========================================================
+
+Exercise 2c
+
+- Compute the means and standard deviations of all numeric variables in the iris dataset by their Species grouping
+
+
+
+
+
+
+
+
+
+
+dplyr
+========================================================
+We can also count the number of distinct items in a vector:
+```{r}
+n_distinct(iris$Species)
+table(iris$Species, exclude = NULL)
+```
+
+
+
+
+dplyr
+========================================================
+
+RStudio cheatsheets: \url{https://www.rstudio.com/resources/cheatsheets/}
+
+
+\includegraphics[scale=.35]{images/cheat-dplyr.png}
+
+
+
+
+
+
+
+
+
+
+Module 1-3
+========================================================
+
+Plotting
+
+1. Introduction to base plotting
+2. Customizing plots
+3. Saving plots
+
+
+
+Introduction to base plotting
+========================================================
+
+Base R comes with excellent graphing capabilities
+
+- Scatterplots
+- Histograms
+- Box plots
+
+Graphical devices (how your computer represents graphical objects) available in R
+
+- pdf
+- postscript
+- png
+- jpeg
+
+
+
+
+
+
+Introduction to base plotting
+========================================================
+
+
+- base R plots
+    - useful for creating quick plots
+    - (easily) customizable
+- Other graphics packages exist in R
+    - Great for "faceting"
+    - Great for multiple panels of plots
+
+Other graphics packages
+
+- ggplot2 
+    - Written by Hadley Wickham (RStudio)
+    - We will cover ggplot2 later
+- lattice
+    - Also useful for multiple panels of plots
+    - We will not cover in this course
+
+
+
+
+
+
+
+Introduction to base plotting
+========================================================
+
+Fisher's `iris` data:
+```{r mod3}
+head(iris)
+head(iris$Sepal.Length)
+```
+
+
+
+
+Introduction to base plotting
+========================================================
+To create a scatterplot, `plot(x, y)`
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width)
+```
+
+
+
+
+Introduction to base plotting
+========================================================
+
+
+Histograms show the data distribution for a variable
+
+```{r}
+hist(iris$Sepal.Length)
+```
+
+
+Introduction to base plotting
+========================================================
+
+- Boxplots show 5-number summary
+```{r}
+boxplot(iris$Sepal.Length)
+```
+
+
+
+
+
+ 
+Customizing plots 
+======================================================== 
+  What can we change? 
+ 
+- Add labels 
+- Change colors 
+- Change plotting symbol 
+- Many other things
+```{r, eval = F} 
+?plot.default 
+?par 
+``` 
+
+
+
+Short R reference card
+======================================================== 
+
+\url{https://cran.r-project.org/doc/contrib/Short-refcard.pdf}
+
+\includegraphics[scale=.7]{images/shortR-plot.pdf}
+
+
+
+
+Customizing plots
+========================================================
+
+
+  Adding labels
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width",
+    main = "Scatterplot of Iris data")
+```
+
+
+
+
+Colors
+========================================================
+
+
+Use the `col` argument in the `plot` function to set color
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", col = "red",
+    main = "Scatterplot of Iris data")
+```
+
+
+Colors
+========================================================
+
+
+We can also use numbers to specify colors based on their order in `palette()`
+```{r}
+palette()
+```
+
+
+
+Colors
+========================================================
+
+
+We can also use numbers to specify colors:
+
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", col = 3,
+    main = "Scatterplot of Iris data")
+```
+
+
+
+Colors
+========================================================
+
+
+We can also use hexadecimal notation (hex) for the combination of red, green, and blue to specify colors:
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", col = "#FF00FF",
+    main = "Scatterplot of Iris data")
+```
+
+
+Colors
+========================================================
+```{r}
+colors()
+```
+
+
+
+
+Colors
+========================================================
+
+\url{http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf}
+
+<br>
+\includegraphics[scale=.4]{images/colors.png}
+
+
+
+
+
+
+
+Colors
+========================================================
+
+
+Plotting by a categorical variable
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", col = iris$Species,
+    main = "Scatterplot of Iris data")
+```
+
+
+Plotting symbol
+========================================================
+
+
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", pch = 16,
+    main = "Scatterplot of Iris data")
+```
+
+
+Plotting symbols
+======================================================== 
+
+\includegraphics[scale=.6]{images/plotsymbol.png}
+
+
+
+Exercise
+========================================================
+
+
+Exercise 3a
+
+- Plot petal width against sepal width where the color is "dodgerblue" and the plotting symbol is a triangle.
+
+
+
+
+
+Boxplots
+========================================================
+
+- Boxplots show 5-number summary
+- Adding boxplot for different values
+```{r}
+boxplot(iris$Sepal.Length ~ iris$Species)
+```
+
+
+
+Sizing
+========================================================
+
+
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length", 
+    ylab = "Sepal width", 
+    main = "Scatterplot of Iris data")
+```
+
+
+
+Sizing
+========================================================
+
+
+Decrease size of plotting points
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", cex = .1,
+    main = "Scatterplot of Iris data")
+```
+
+
+Sizing
+========================================================
+
+
+Increase size of axis labels and axes:
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width", cex.lab = 1.5, cex.axis = 2,
+    main = "Scatterplot of Iris data")
+```
+
+
+
+
+
+
+
+Layering plots
+========================================================
+
+Adding a horizontal line at 4:
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width,
+     main = "Scatterplot of Iris data")
+abline(h = 4, col = "red")
+```
+
+
+
+
+Exercise
+========================================================
+
+Exercise 3b
+
+- Plot sepal width against sepal length
+- Add a horizontal lines for the mean sepal width for each species.
+
+
+ 
+
+
+Layering plots
+========================================================
+
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width,
+     main = "Scatterplot of Iris data")
+abline(h = mean(iris$Sepal.Width), col = "red")
+abline(v = mean(iris$Sepal.Length), col = "blue")
+```
+
+
+
+
+Layering plots
+========================================================
+
+Adding a specific point
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width,
+     main = "Scatterplot of Iris data")
+points(x = mean(iris$Sepal.Length), y = mean(iris$Sepal.Width), col = "red",
+    pch = "+", cex = 2)
+```
+
+
+
+
+Layering plots
+========================================================
+
+Highlighting specific points
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width,
+     main = "Scatterplot of Iris data")
+points(x = iris$Sepal.Length[1 : 10], 
+    y = iris$Sepal.Width[1 : 10], col = "red")
+```
+
+
+
+
+
+
+Legends
+========================================================
+
+Adding a legend to a plot
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, col = iris$Species,
+     main = "Scatterplot of Iris data")
+legend("topright", legend = c("setosa", "versicolor", "virginica"), 
+       col = 1 : 3, pch = 1)
+```
+
+
+Legends
+========================================================
+
+Adding a legend to a plot
+```{r}
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, col = iris$Species,
+     main = "Scatterplot of Iris data")
+legend(5.5, 4, legend = c("setosa", "versicolor", "virginica"), 
+      col = 1 : 3, pch = 1)
+```
+
+
+
+
+
+Exercise
+========================================================
+
+Exercise 3c
+
+- Modify the previous plot to add horizontal lines at the mean sepal width by species
+- Color the lines and points by species
+- Add lines to the legend
+
+
+
+
+
+
+
+
+
+
+
+
+
+Saving plots
+========================================================
+
+**Set your working directory or specify file path before saving your plots**
+
+
+Saving your plot as a png (portable network graphic):
+
+- Height and width are in pixels (default is 480 by 480)
+
+```{r, eval = T}
+png("Iris_scatterplot.png", height = 700, width = 480)
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width",
+    main = "Scatterplot of Iris data")
+dev.off()
+```
+
+Saving plots
+========================================================
+
+
+Saving your plot as a pdf (portable document format):
+
+- Height and width are in inches (default is 7 by 7)
+```{r, eval = T}
+pdf("Iris_scatterplot.pdf", height = 11, width = 7)
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width",
+    main = "Scatterplot of Iris data")
+dev.off()
+```
+
+
+
+
+Saving plots
+========================================================
+
+What if you don't run `dev.off()`?
+
+- Graphics device does not close
+  - You will not have your desired output
+    - Can create multiple pages of plots
+
+```{r, results="hide"}
+pdf("Iris_scatterplot_2.pdf")
+plot(x = iris$Sepal.Length, y = iris$Sepal.Width, xlab = "Sepal length",
+    ylab = "Sepal width",
+    main = "Scatterplot of Iris data")
+plot(x = iris$Petal.Length, y = iris$Petal.Width, xlab = "Petal length",
+    ylab = "Petal width",
+    main = "Scatterplot of Iris data")
+dev.off()
+```
+
+
+
+
+
+Overview exercise 1
+========================================================
+
+- Look at the dataset `airquality` in R.
+- Create a table of means for each numeric variable (except day and month) by month.  Which variables have missing values?
+- Create a histogram of ozone with informative x-axis and main title labels (Hint: look at the help page for the dataset to see the units for ozone).
+- Plot ozone against temperature with
+    - The color of the plotting points varies by month.
+    - Vertical lines corresponding to the mean of temperature for each month.
+    - A legend to the top left indicating the color of each month (Hint: the colors R will use by default correspond to the month numbers).
+
+    
+The final plot should look like:
+
+
+Overview exercise 1
+========================================================
+
+
+
+\includegraphics[scale=.5]{images/overallex1.png}
+
+
+

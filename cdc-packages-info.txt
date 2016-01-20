@@ -1,0 +1,19 @@
+
+From ITSO, you have 3 options for downloading/installing R packages:
+
+1.   Call ITSO and request to allow to read/write to the R folder in C: Program files. Take less than 5 minutes the call and you can left out all the headaches that comes to play with other folders.
+
+ 
+
+2.     (a ) Create a directory C:\R
+       (b ) Install R there
+       (c ) Install/load packages the usual way:  install.packages() and library() w/out extra args (or the “Packages” menu in R GUI)
+ 
+ 
+3.   Add another location to the library path, eg:
+
+install.packages('lattice', lib = "//cdc.gov/private/L728/xmo5/R Packages",   dependencies = TRUE)
+
+.libPaths(c("//cdc.gov/private/L728/xmo5/R Packages", .libPaths()))
+
+ 

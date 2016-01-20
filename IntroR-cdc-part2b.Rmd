@@ -1,0 +1,423 @@
+---
+title: "Introduction to R: Part 2-B"
+author: "Jenna Krall, PhD"
+date: "January 2016"
+height: 900
+font-family: Helvetica
+width: 1440
+fontsize: 10pt
+output:
+  beamer_presentation:
+    includes:
+      in_header: images/header.tex
+---
+
+
+
+```{r set_knitr_chunk_options, echo = F, message = F, warning = F}
+# Source file with setup
+source("sourcefile.R")
+```
+
+
+
+Modules Part 2
+========================================================
+
+1. Merging and transforming data
+2. ggplot2
+3. Control structures and functions
+4. Reproducibility in R 
+5. R extensions  
+
+
+
+
+Module 2-4
+========================================================
+
+Reproducibility in R
+
+1. Introduction to reproducible research
+2. `knitr`
+3. Code chunk options
+4. Tables, figures, in-line code
+5. External code
+
+
+Reproducible research
+========================================================
+
+``...the calculation of quantitative scientific results by independent scientists using the original datasets and methods''
+
+What do we need?
+
+- Reproducibility = Tools + Workflow (Stodden, Leisch, and Peng)
+- Literate statistical programming (Rossini via Knuth):
+    - programming language + documentation language
+- We need to link **data, code, results, and interpretation**
+
+
+
+
+
+
+
+
+Sourcing external code
+========================================================
+We might have 
+
+- One .R file to clean and merge datasets
+- One .R file to create output including tables and figures
+
+If we want to separate the two files, we can call the second from the first using the `source` function.
+```{r mod5}
+rm(list = ls())
+ls()
+```
+```{r, eval = T}
+source("data_clean.R")
+```
+
+```{r}
+ls()
+```
+
+```{r, echo = F, eval = T}
+echo1 <- F
+```
+
+
+Introduction to knitr
+=======================================================
+
+knitr
+
+- Developed by Yihui Xie at Iowa State (now at RStudio)
+- Integration with RStudio
+
+We will focus on using knitr to integrate R and markdown, but knitr is actually a flexible tool that can be used in broader ways.
+
+- We write text (in markdown) separated by code chunks (written in R)
+- In our output, we include code (or not) and results (relevant tables and figures)
+- knitr ties together our code and our final report
+
+
+
+
+
+This class is reproducible
+========================================================
+
+**ALL** slides for this class have been created using knitr.  This means that if R changes, if the dataset changes, if you want to see how I created the slides, *the code and output and interpretation is all there*.
+
+
+
+Ex 1: Plotting
+========================================================
+
+```{r, echo = echo1}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, 
+    color = Species)) + geom_point()
+```
+
+
+Ex 1: Plotting
+========================================================
+
+```{r, echo = !echo1}
+ggplot(iris, aes(x = Sepal.Width, y = Sepal.Length, 
+    color = Species)) + geom_point()
+```
+
+
+
+Ex 2: Summary statistics
+========================================================
+
+```{r, results="verbatim", echo = echo1}
+summary(iris)
+```
+
+
+
+Example 2: Summary statistics
+========================================================
+
+```{r, results="verbatim", echo = !echo1}
+summary(iris)
+```
+
+
+
+
+
+What is markdown?
+========================================================
+
+- Markdown is a markup language
+- Use to write reports, papers, etc.
+- Replaces "buttons" in Microsoft Word or similar with code
+
+### How to format using markdown
+
+- Preceeding a word with "#" or "##" makes it a header and subheader respectively
+- Surrounding a word with "\*" or "\*\*" makes it *italics* or **bold** respectively
+- Bullets are created by a dash and then a space
+- Indented bullets are created by using two spaces before the dash
+  
+  
+1. Numbered lists are created by specifying the number, a period, and a space
+2. Here is number 2.
+
+
+
+
+
+How to use knitr
+========================================================
+
+### Filling in the content
+
+
+- Write some text using markdown, e.g. ``I am doing an analysis of the iris dataset in R.''
+- Add code in ``code chunks''
+    - Start with three backticks and a bracketed \{r\}
+    - End with three backticks 
+
+
+\```{r} 
+```
+mean(rnorm(10))
+```
+\```
+
+When you are finished, click the knit button to create your dynamic document.
+
+
+
+
+Code chunk options and names
+========================================================
+
+
+### Code chunk names
+- Code chunks can be named within the bracket: {r codechunk1} or {r simulatedata}
+- Useful to indicate what the code chunk does
+- Can help with debugging documents
+- Can make it easier to navigate a long document
+
+
+  
+  
+  
+Code chunk options and names
+========================================================
+
+You can specify code chunk options like arguments to an R function
+
+- Code chunk options are specified after a comma following `r` in the code chunk.
+- Useful code chunk options:
+    - eval: TRUE or FALSE indicating whether you want R to run the code. 
+    - echo: TRUE or FALSE indicating whether the final document should show the code
+e.g. 
+
+\```{r codechunk1, echo = T, eval = F}
+
+`mean(rnorm(10))`
+
+\```
+
+
+  
+Code chunk options and names
+========================================================
+
+
+- warning = TRUE or FALSE depending on whether you want to display warnings
+- message = TRUE or FALSE depending on whether you want to display messages
+
+```{r, warning = T, message = T}
+detach(package:dplyr)
+library(dplyr)
+```
+  
+Figures in knitr
+========================================================  
+  
+  
+We can include figures in `knitr` using the same base R or ggplot functions
+
+- You can control the output with code chunk options out.width and out.height, which specify the height and width of the chunk in pixels (for html file)
+
+```{r dataclean, verbatim = T}
+g1 <- ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width)) + 
+    geom_point() 
+```
+
+
+
+
+  
+Figures in knitr
+========================================================  
+ 
+```{r}
+g1
+```
+
+Tables in knitr
+========================================================  
+
+```{r, echo = T}
+iris_spec <- group_by(iris, Species)
+s1 <- summarise_each(iris_spec, funs(mean), Sepal.Length : Petal.Width)
+s1
+```
+
+
+
+Tables in knitr
+========================================================  
+
+Convenient and easy to use knitr to make tables by using the `kable` function
+
+```{r, echo = T}
+kable(s1)
+```
+
+
+
+Tables in knitr
+========================================================  
+
+We can also use the arguments of kable
+```{r}
+kable(s1, digits = 2)
+```
+
+Tables in knitr
+========================================================  
+
+We can also add captions and realign the output
+```{r}
+kable(s1, digits = 0, align = rep("c", 4), format = "pandoc",
+  caption = "Mean of iris variables by species")
+```
+
+
+
+
+In-line code
+========================================================
+
+You can put code in the lines of your text by using:
+
+\`{r mean(var1)}`
+
+As an example, here is my code chunk that defines date:
+```{r, verbatim = T}
+date <- Sys.Date()
+```
+
+Now I can do inline code specifying the day: Today is `r date`.  Now, when I rerun the code on a different day, this will update.
+
+Include code that you don't want to run inside two backticks, e.g. today we are learning about `knitr`.   
+
+
+
+Ex 3: Writing interpretations.
+========================================================
+The R dataset *iris* has `r ncol(iris)` variables, including `r paste(colnames(iris), collapse = ", ")`.  The dataset has `r nrow(iris)` observations.  The average petal length is `r mean(iris$Petal.Length)` with a standard deviation (sd) of `r sd(iris$Petal.Length)`.  The average petal width was `r mean(iris$Petal.Width)` (sd = `r sd(iris$Petal.Width)`).  
+
+
+
+
+Ex 3: Writing interpretations.
+========================================================
+```{r, echo = !echo1}
+iris <- filter(iris, Species != "setosa")
+```
+The R dataset *iris* has `r ncol(iris)` variables, including `r paste(colnames(iris), collapse = ", ")`.  The dataset has `r nrow(iris)` observations.  The average petal length is `r mean(iris$Petal.Length)` with a standard deviation (sd) of `r sd(iris$Petal.Length)`.  The average petal width was `r mean(iris$Petal.Width)` (sd = `r sd(iris$Petal.Width)`).  
+
+
+
+How to use knitr
+========================================================
+
+### Creating the document
+
+
+- Open RStudio and select `file-> new file -> R markdown`
+- Give the document a title (title of the document, not the file) and author
+- Specify the output (html, pdf, word).  
+    - We will be using html output for this class
+
+
+
+
+Output files
+========================================================  
+
+Rstudio with knitr allows your document to be output as:
+
+1. html
+2. pdf
+3. word document
+
+
+
+### Slides using RStudio and knitr
+
+- All slides for this course are made using knitr, which means that all code is dynamically included in the document
+- This allows changes in the dataset or code to propagate through to the slides
+- It also allows others to look at the underlying code and results
+
+
+R presentations using knitr
+========================================================
+
+We can create R presentations using knitr
+
+
+### Creating the presentation
+
+- Open RStudio and select `file-> new file -> R presentation`
+- Save the file
+- Title followed by string of equal signs indicates a new slide
+- Can use markdown and introduce code chunks as in an R Markdown document
+- Great for teaching
+
+
+
+
+
+    
+- External code
+- Output in PDF and Word
+- Introduction to functions
+
+More markdown
+========================================================
+
+
+- Can create linked urls: <http://jennakrall.com/IntrotoRepi/>
+- Header options
+    - theme and highlight
+    - table of contents and numbered sections
+- More code chunk options
+    - global options
+    - caching
+
+
+
+Markdown/knitr practice
+========================================================
+
+Final R exercise
+
+- Goal: Use the diabetes dataset to perform exploratory analyses and apply statistical methods to test scientific hypotheses.
+- Option: recreate the document knitr-md-practice.html
+
+
